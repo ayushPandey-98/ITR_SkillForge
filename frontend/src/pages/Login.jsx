@@ -40,7 +40,11 @@ function Login() {
     } catch (error) {
       console.log(error);
       setLoading(false);
-      toast.error(error.response.data.message);
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Login failed";
+      toast.error(message);
     }
   };
   const googleLogin = async () => {
@@ -62,7 +66,11 @@ function Login() {
       toast.success("Login Successfully");
     } catch (error) {
       console.log(error);
-      toast.error(error.response.data.message);
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Login failed";
+      toast.error(message);
     }
   };
   return (

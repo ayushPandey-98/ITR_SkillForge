@@ -1,24 +1,30 @@
-import { useEffect } from "react"
-import { serverUrl } from "../App"
-import axios from "axios"
-import { useDispatch, useSelector } from "react-redux"
-import { setUserData } from "../redux/userSlice"
-const getCurrentUser = ()=>{
-    let dispatch = useDispatch()
-   
-    useEffect(()=>{
-        const fetchUser = async () => {
-            try {
-                let result = await axios.get(serverUrl + "/api/user/currentuser" , {withCredentials:true})
-                dispatch(setUserData(result.data))
+import { useEffect } from "react";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { serverUrl } from "../App";
+import { setUserData } from "../redux/userSlice";
 
-            } catch (error) {
-                console.log(error)
-                dispatch(setUserData(null))
-            }
-        }
-        fetchUser()
-    },[])
-}
+// Proper custom hook (React hook naming + rules-of-hooks compliant)
+const useGetCurrentUser = () => {
+  const dispatch = useDispatch();
 
-export default getCurrentUser
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const result = await axios.get(
+          serverUrl + "/api/user/currentuser",
+          { withCredentials: true }
+        );
+        dispatch(setUserData(result.data));
+      } catch (error) {
+        console.log(error);
+        dispatch(setUserData(null));
+      }
+    };
+
+    fetchUser();
+  }, [dispatch]);
+};
+
+export default useGetCurrentUser;
+export { useGetCurrentUser };

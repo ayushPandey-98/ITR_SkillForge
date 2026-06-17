@@ -12,6 +12,7 @@ const isAuth = async (req, res, next) => {
     const verifyToken = jwt.verify(token, process.env.JWT_SECRET);
 
     req.userId = verifyToken.userId;
+    req.role = verifyToken.role;
     next();
   } catch (error) {
     console.log(error);
