@@ -26,16 +26,16 @@ function ExploreCourses() {
       {/* Left Section */}
       <div className="w-full lg:w-[350px] flex flex-col items-start justify-center gap-2">
         <h2 className="text-4xl md:text-5xl font-semibold">Explore</h2>
-        <h2 className="text-3xl md:text-4xl font-semibold">Our Courses</h2>
+        <h2 className="text-3xl md:text-4xl font-semibold">Skill Tracks</h2>
         <p className="text-[16px] text-gray-600">
-          Learn the most in-demand skills with hands-on courses designed to
-          advance your career.
+          Learn assigned skills with internal courses, assessments, and verified
+          badges.
         </p>
         <button
           className="px-5 py-3 mt-6 bg-black text-white rounded-lg text-lg font-medium flex items-center gap-2 hover:scale-105 transition"
           onClick={() => navigate("/allcourses")}
         >
-          Explore Courses <SiViaplay className="w-6 h-6 text-[#38D2CA]" />
+          View Skill Courses <SiViaplay className="w-6 h-6 text-[#38D2CA]" />
         </button>
       </div>
 

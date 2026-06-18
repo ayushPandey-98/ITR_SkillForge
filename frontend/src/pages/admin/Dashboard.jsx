@@ -1,140 +1,266 @@
-import React from 'react'
-import axios from 'axios'
+import React from "react";
+import axios from "axios";
 import { useSelector } from "react-redux";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import img from "../../assets/empty.jpg"; // fallback photo
-import { useNavigate } from 'react-router-dom';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { useNavigate } from "react-router-dom";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import { serverUrl } from '../../App';
+import { serverUrl } from "../../App";
+
+const shortCourseName = (title) => {
+  const safeTitle = String(title || "Untitled");
+  return safeTitle.length > 14 ? `${safeTitle.slice(0, 14)}...` : safeTitle;
+};
+
 function Dashboard() {
   const navigate = useNavigate();
   const { userData } = useSelector((state) => state.user);
+  const isAdmin = userData?.role === "admin";
+  const isManager = userData?.role === "manager";
+  const canManageLearning = isAdmin || isManager;
 
-  const [adminCourses, setAdminCourses] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
+  const [courses, setCourses] = React.useState([]);
+  const [loading, setLoading] = React.useState(canManageLearning);
   const [error, setError] = React.useState(null);
 
   React.useEffect(() => {
-    const fetchAdminCourses = async () => {
+    if (!canManageLearning) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchCourses = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // admin-only endpoint
         const res = await axios.get(`${serverUrl}/api/admin/courses`, {
           withCredentials: true,
         });
 
-        setAdminCourses(Array.isArray(res.data) ? res.data : []);
+        setCourses(Array.isArray(res.data) ? res.data : []);
       } catch (e) {
-        setError(e?.response?.data?.message || 'Failed to load dashboard data');
+        setError(e?.response?.data?.message || "Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAdminCourses();
-  }, []);
+    fetchCourses();
+  }, [canManageLearning]);
 
-  const courseProgressData = React.useMemo(() => {
-    return (adminCourses || []).map((course) => ({
-      name: (course?.title || 'Untitled').slice(0, 10) + ((course?.title || '').length > 10 ? '...' : ''),
-      lectures: course?.lectures?.length || 0,
-      reviews: course?.reviews?.length || 0,
-    }));
-  }, [adminCourses]);
+  const learningMaterialData = React.useMemo(
+    () =>
+      courses.map((course) => ({
+        name: shortCourseName(course?.title),
+        materials: course?.lectures?.length || 0,
+      })),
+    [courses]
+  );
 
-  const enrollmentData = React.useMemo(() => {
-    // enrolledStudents might not be populated/available from /api/admin/courses.
-    // So we derive a safe metric that always exists: reviews count.
-    return (adminCourses || []).map((course) => ({
-      name: (course?.title || 'Untitled').slice(0, 10) + ((course?.title || '').length > 10 ? '...' : ''),
-      reviews: course?.reviews?.length || 0,
-    }));
-  }, [adminCourses]);
+  const totalCourses = courses.length;
+  const totalMaterials = courses.reduce(
+    (sum, course) => sum + (course?.lectures?.length || 0),
+    0
+  );
+  const publishedCourses = courses.filter((course) => course?.isPublished).length;
+  const draftCourses = totalCourses - publishedCourses;
 
-  const totalCourses = adminCourses?.length || 0;
-  const totalLectures = (adminCourses || []).reduce((sum, c) => sum + (c?.lectures?.length || 0), 0);
-  const totalReviews = (adminCourses || []).reduce((sum, c) => sum + (c?.reviews?.length || 0), 0);
+  const stats = canManageLearning
+    ? [
+        { label: "Courses", value: totalCourses },
+        { label: "Learning Materials", value: totalMaterials },
+        { label: "Published", value: publishedCourses },
+        { label: "Drafts", value: draftCourses },
+      ]
+    : [
+        { label: "Assigned Skills", value: "-" },
+        { label: "Courses In Progress", value: "-" },
+        { label: "Assessments", value: "-" },
+        { label: "Badges Earned", value: "-" },
+      ];
+
+  const quickActions = [
+    isAdmin && {
+      label: "Manage Users",
+      description: "Create Managers and Employees.",
+      path: "/admin/users",
+    },
+    canManageLearning && {
+      label: "Manage Courses",
+      description: "Create and update internal learning paths.",
+      path: "/admin/courses",
+    },
+    canManageLearning && {
+      label: "Create Course",
+      description: "Add PDFs, documents, videos, and learning materials.",
+      path: "/admin/create-course",
+    },
+    !canManageLearning && {
+      label: "My Courses",
+      description: "Continue assigned learning materials.",
+      path: "/enrolledcourses",
+    },
+    !canManageLearning && {
+      label: "Skill Profile",
+      description: "View progress, badges, and reports.",
+      path: "/profile",
+    },
+  ].filter(Boolean);
+
+  const responsibilities = isAdmin
+    ? [
+        "Create and manage Managers and Employees.",
+        "Create skills, courses, quizzes, assignments, puzzles, and assessments.",
+        "Assign courses and skills across the organization.",
+        "Track progress, scores, badges, and reports.",
+      ]
+    : isManager
+    ? [
+        "Manage employees under your team.",
+        "Create and assign courses, skills, quizzes, assignments, and assessments.",
+        "Monitor team progress and performance.",
+        "Manager accounts cannot create Admin or Manager users.",
+      ]
+    : [
+        "View assigned skills and courses.",
+        "Complete learning materials and assessments.",
+        "Earn verified skill badges after passing assessments.",
+        "Use failed attempts to trigger additional learning and retests.",
+      ];
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <FaArrowLeftLong className=' w-[22px] absolute top-[10%] left-[10%] h-[22px] cursor-pointer' onClick={() => navigate("/")} />
-      <div className="w-full px-6 py-10   bg-gray-50 space-y-10">
-        {/* Welcome Section */}
-        <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-md p-6 flex flex-col md:flex-row items-center gap-6">
-          <img
-            src={userData?.photoUrl || img}
-            alt="Educator"
-            className="w-28 h-28 rounded-full object-cover border-4 border-black shadow-md"
-          />
-          <div className="text-center md:text-left space-y-1">
-            <h1 className="text-2xl font-bold text-gray-800">
-              Welcome, {userData?.name || "Admin"} 👋
-            </h1>
-            <h1 className='text-xl font-semibold text-gray-800'>Total Courses : <span className='font-light text-gray-900'>{totalCourses}</span></h1>
-            <p className="text-gray-600 text-sm">
-              Lectures: {totalLectures} • Reviews: {totalReviews}
-            </p>
-            <div className="flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start">
-              <h1
-                className='px-[10px] text-center  py-[10px] border-2  bg-black border-black text-white  rounded-[10px] text-[15px] font-light flex items-center justify-center gap-2 cursor-pointer'
-                onClick={() => navigate("/admin/courses")}
-              >
-                Manage Courses
+    <div className="min-h-screen bg-gray-100 px-4 py-6 sm:px-6">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <button
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-black"
+          onClick={() => navigate("/")}
+        >
+          <FaArrowLeftLong className="h-4 w-4" />
+          Home
+        </button>
+
+        <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase text-gray-500">
+                ITR SkillForge
+              </p>
+              <h1 className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">
+                Welcome, {userData?.name || "User"}
               </h1>
-              <h1
-                className='px-[10px] text-center  py-[10px] border-2  bg-white border-black text-black rounded-[10px] text-[15px] font-light flex items-center justify-center gap-2 cursor-pointer'
-                onClick={() => navigate("/admin/users")}
-              >
-                Manage Users
-              </h1>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-600">
+                Internal employee skill development, assessment, and badge
+                tracking for ITRadiant.
+              </p>
+            </div>
+            <span className="w-fit rounded-md border border-gray-300 px-3 py-1 text-sm font-medium capitalize text-gray-700">
+              {userData?.role || "employee"}
+            </span>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {stats.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
+            >
+              <p className="text-sm text-gray-500">{item.label}</p>
+              <p className="mt-3 text-3xl font-bold text-gray-900">{item.value}</p>
+            </div>
+          ))}
+        </section>
+
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm lg:col-span-2">
+            <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {quickActions.map((action) => (
+                <button
+                  key={action.label}
+                  className="rounded-md border border-gray-200 p-4 text-left transition hover:border-black hover:bg-gray-50"
+                  onClick={() => navigate(action.path)}
+                >
+                  <span className="block font-semibold text-gray-900">
+                    {action.label}
+                  </span>
+                  <span className="mt-1 block text-sm leading-5 text-gray-600">
+                    {action.description}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
-        </div>
 
-        {/* Graphs Section */}
-        {loading ? (
-          <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-6 text-gray-700">Loading dashboard...</div>
-        ) : error ? (
-          <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-6 text-red-600">{error}</div>
-        ) : adminCourses.length === 0 ? (
-          <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-6 text-gray-700">No courses found for analytics.</div>
+          <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900">Role Focus</h2>
+            <div className="mt-4 space-y-3">
+              {responsibilities.map((item) => (
+                <div key={item} className="flex gap-3 text-sm leading-5 text-gray-700">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-black" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {canManageLearning ? (
+          loading ? (
+            <div className="rounded-lg border border-gray-200 bg-white p-5 text-gray-700 shadow-sm">
+              Loading dashboard...
+            </div>
+          ) : error ? (
+            <div className="rounded-lg border border-red-200 bg-white p-5 text-red-600 shadow-sm">
+              {error}
+            </div>
+          ) : courses.length === 0 ? (
+            <div className="rounded-lg border border-gray-200 bg-white p-5 text-gray-700 shadow-sm">
+              No internal courses found yet.
+            </div>
+          ) : (
+            <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="mb-5 flex flex-col gap-1">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Learning Materials by Course
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Counts PDFs, documents, video links, and other materials added
+                  as course lectures.
+                </p>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={learningMaterialData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="materials" fill="#111827" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </section>
+          )
         ) : (
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Lectures Chart */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-lg font-semibold mb-4">Course Progress (Lectures)</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={courseProgressData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="lectures" fill="black" radius={[5, 5, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Reviews Chart (safe metric) */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-lg font-semibold mb-4">Course Reviews</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={enrollmentData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="reviews" fill="black" radius={[5, 5, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900">Learning Path</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              Complete assigned course materials, take assessments, and earn
+              verified skill badges. Failed assessments should guide you to
+              additional learning before retesting.
+            </p>
+          </section>
         )}
       </div>
     </div>
   );
 }
 
-export default Dashboard
-
+export default Dashboard;

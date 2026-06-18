@@ -5,16 +5,23 @@ import upload from "../middlewares/multer.js"
 
 let courseRouter = express.Router()
 
-courseRouter.post("/create",isAuth,createCourse)
+const courseManagerOnly = (req, res, next) => {
+    if (!["admin", "manager"].includes(req.role)) {
+        return res.status(403).json({message:"Admin or manager only"})
+    }
+    return next()
+}
+
+courseRouter.post("/create",isAuth,courseManagerOnly,createCourse)
 courseRouter.get("/getpublishedcoures",getPublishedCourses)
-courseRouter.get("/getcreatorcourses",isAuth,getCreatorCourses)
-courseRouter.post("/editcourse/:courseId",isAuth,upload.single("thumbnail"),editCourse)
+courseRouter.get("/getcreatorcourses",isAuth,courseManagerOnly,getCreatorCourses)
+courseRouter.post("/editcourse/:courseId",isAuth,courseManagerOnly,upload.single("thumbnail"),editCourse)
 courseRouter.get("/getcourse/:courseId",isAuth,getCourseById)
-courseRouter.delete("/removecourse/:courseId",isAuth,removeCourse)
-courseRouter.post("/createlecture/:courseId",isAuth,createLecture)
+courseRouter.delete("/removecourse/:courseId",isAuth,courseManagerOnly,removeCourse)
+courseRouter.post("/createlecture/:courseId",isAuth,courseManagerOnly,createLecture)
 courseRouter.get("/getcourselecture/:courseId",isAuth,getCourseLecture)
-courseRouter.post("/editlecture/:lectureId",isAuth,upload.single("videoUrl"),editLecture)
-courseRouter.delete("/removelecture/:lectureId",isAuth,removeLecture)
+courseRouter.post("/editlecture/:lectureId",isAuth,courseManagerOnly,upload.single("videoUrl"),editLecture)
+courseRouter.delete("/removelecture/:lectureId",isAuth,courseManagerOnly,removeLecture)
 courseRouter.post("/getcreator",isAuth,getCreatorById)
 
 

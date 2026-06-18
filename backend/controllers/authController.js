@@ -6,12 +6,38 @@ import User from "../models/userModel.js"
 
 import sendMail from "../configs/Mail.js"
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
+const clearCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+};
+
+const allowedRoles = ["admin", "manager", "employee"];
+
+const normalizeRole = (role) => {
+    return allowedRoles.includes(role) ? role : "employee";
+}
+
+const sanitizeUser = (user) => {
+    const safeUser = user.toObject ? user.toObject() : { ...user };
+    delete safeUser.password;
+    return safeUser;
+}
+
 
 export const signUp=async (req,res)=>{
  
     try {
 
         let {name,email,password,role}= req.body
+        role = normalizeRole(role)
         let existUser= await User.findOne({email})
         if(existUser){
             return res.status(400).json({message:"email already exist"})
@@ -31,15 +57,9 @@ export const signUp=async (req,res)=>{
             role,
            
             })
-        let token = await genToken(user._id)
-        res.cookie("token", token, {
-          httpOnly: true,
-          // When using sameSite="none", browser requires secure cookies.
-          secure: true,
-          sameSite: "none",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-        })
-        return res.status(201).json(user)
+        let token = await genToken(user._id, user.role);
+        res.cookie("token", token, cookieOptions)
+        return res.status(201).json(sanitizeUser(user))
 
     } catch (error) {
         console.log("signUp error")
@@ -58,15 +78,9 @@ export const login=async(req,res)=>{
         if(!isMatch){
             return res.status(400).json({message:"incorrect Password"})
         }
-        let token =await genToken(user._id)
-        const isProduction = process.env.NODE_ENV === "production";
-        res.cookie("token", token, {
-          httpOnly: true,
-          secure: false,
-          sameSite: "lax",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-        })
-        return res.status(200).json(user)
+        let token = await genToken(user._id, user.role);
+        res.cookie("token", token, cookieOptions)
+        return res.status(200).json(sanitizeUser(user))
 
     } catch (error) {
         console.log("login error")
@@ -79,7 +93,7 @@ export const login=async(req,res)=>{
 
 export const logOut = async(req,res)=>{
     try {
-        await res.clearCookie("token")
+        res.clearCookie("token", clearCookieOptions)
         return res.status(200).json({message:"logOut Successfully"})
     } catch (error) {
         return res.status(500).json({message:`logout Error ${error}`})
@@ -93,17 +107,12 @@ export const googleSignup = async (req,res) => {
         let user= await User.findOne({email})
         if(!user){
             user = await User.create({
-            name , email ,role
+            name , email ,role: normalizeRole(role)
         })
         }
-        let token =await genToken(user._id)
-        res.cookie("token", token, {
-          httpOnly: true,
-          secure: true,
-          sameSite: "none",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-        })
-        return res.status(200).json(user)
+        let token = await genToken(user._id, user.role);
+        res.cookie("token", token, cookieOptions)
+        return res.status(200).json(sanitizeUser(user))
 
 
     } catch (error) {

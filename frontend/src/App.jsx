@@ -35,6 +35,9 @@ export const serverUrl = "http://localhost:8000";
 
 function App() {
   let { userData } = useSelector((state) => state.user);
+  const isAdmin = userData?.role === "admin";
+  const isManager = userData?.role === "manager";
+  const canManageCourses = isAdmin || isManager;
 
   getCouseData();
   getCreatorCourseData();
@@ -103,9 +106,7 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              userData?.role === "admin" ? (
-                <Dashboard />
-              ) : userData?.role === "educator" ? (
+              userData ? (
                 <Dashboard />
               ) : (
                 <Navigate to="/signup" replace />
@@ -116,7 +117,7 @@ function App() {
           <Route
             path="/courses"
             element={
-              userData?.role === "educator" ? (
+              canManageCourses ? (
                 <Courses />
               ) : (
                 <Navigate to="/signup" replace />
@@ -126,7 +127,7 @@ function App() {
           <Route
             path="/addcourses/:courseId"
             element={
-              userData?.role === "educator" ? (
+              canManageCourses ? (
                 <AddCourses />
               ) : (
                 <Navigate to="/signup" replace />
@@ -136,7 +137,7 @@ function App() {
           <Route
             path="/createcourses"
             element={
-              userData?.role === "educator" ? (
+              canManageCourses ? (
                 <CreateCourse />
               ) : (
                 <Navigate to="/signup" replace />
@@ -146,7 +147,7 @@ function App() {
           <Route
             path="/createlecture/:courseId"
             element={
-              userData?.role === "educator" ? (
+              canManageCourses ? (
                 <CreateLecture />
               ) : (
                 <Navigate to="/signup" replace />
@@ -156,16 +157,17 @@ function App() {
           <Route
             path="/editlecture/:courseId/:lectureId"
             element={
-              userData?.role === "educator" ? (
+              canManageCourses ? (
                 <EditLecture />
               ) : (
                 <Navigate to="/signup" replace />
               )
             }
           />
-          <Route path="/admin/users" element={userData?.role === "admin" ? <Users /> : <Navigate to="/signup" replace />} />
-          <Route path="/admin/courses" element={userData?.role === "admin" ? <ManageCourses /> : <Navigate to="/signup" replace />} />
-          <Route path="/admin/create-course" element={userData?.role === "admin" ? <AdminCreateCourse /> : <Navigate to="/signup" replace />} />
+          <Route path="/admin/users" element={isAdmin ? <Users /> : <Navigate to="/dashboard" replace />} />
+          <Route path="/admin/courses" element={canManageCourses ? <ManageCourses /> : <Navigate to="/dashboard" replace />} />
+          <Route path="/admin/create-course" element={canManageCourses ? <AdminCreateCourse /> : <Navigate to="/dashboard" replace />} />
+          <Route path="/admin/edit-course/:courseId" element={canManageCourses ? <AdminCreateCourse /> : <Navigate to="/dashboard" replace />} />
 
           <Route path="/forgotpassword" element={<ForgotPassword />} />
         </Routes>

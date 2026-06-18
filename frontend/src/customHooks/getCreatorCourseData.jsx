@@ -10,6 +10,11 @@ const getCreatorCourseData = () => {
     const {userData} = useSelector(state=>state.user)
   return (
     useEffect(()=>{
+    if (!["admin", "manager"].includes(userData?.role)) {
+      dispatch(setCreatorCourseData([]))
+      return
+    }
+
     const getCreatorData = async () => {
       try {
         const result = await axios.get(serverUrl + "/api/course/getcreatorcourses" , {withCredentials:true})
@@ -21,12 +26,13 @@ const getCreatorCourseData = () => {
         
       } catch (error) {
         console.log(error)
-        toast.error(error.response.data.message)
+        const message = error?.response?.data?.message
+        if (message) toast.error(message)
       }
       
     }
     getCreatorData()
-  },[userData])
+  },[userData, dispatch])
   )
 }
 

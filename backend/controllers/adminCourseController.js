@@ -23,7 +23,7 @@ export const adminGetCourseById = async (req, res) => {
 
 export const adminCreateCourse = async (req, res) => {
   try {
-    const { title, category, creator, subTitle, description, level, price, isPublished } = req.body;
+    const { title, category, creator, subTitle, description, level, isPublished } = req.body;
 
     if (!title || !category || !creator) {
       return res
@@ -40,7 +40,6 @@ export const adminCreateCourse = async (req, res) => {
       description: description || "",
       category,
       level,
-      price,
       thumbnail,
       creator,
       isPublished: isPublished === "true" || isPublished === true,
@@ -55,7 +54,7 @@ export const adminCreateCourse = async (req, res) => {
 export const adminEditCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const { title, subTitle, description, category, level, price, isPublished } = req.body;
+    const { title, subTitle, description, category, level, isPublished } = req.body;
 
     let thumbnail;
     if (req.file) thumbnail = await uploadOnCloudinary(req.file.path);
@@ -69,7 +68,6 @@ export const adminEditCourse = async (req, res) => {
       description,
       category,
       level,
-      price,
       isPublished: isPublished === "true" || isPublished === true,
       ...(thumbnail ? { thumbnail } : {}),
     };

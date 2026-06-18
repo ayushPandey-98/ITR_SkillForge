@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import axios from "axios";
 import { serverUrl } from "../App";
+import { setUserData } from "../redux/userSlice";
 
 export default function AuthGate({ children }) {
-  const { userData } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -12,11 +13,12 @@ export default function AuthGate({ children }) {
 
     const check = async () => {
       try {
-        await axios.get(serverUrl + "/api/user/currentuser", {
+        const result = await axios.get(serverUrl + "/api/user/currentuser", {
           withCredentials: true,
         });
+        if (!cancelled) dispatch(setUserData(result.data));
       } catch (e) {
-        // ignore - userData will remain null
+        if (!cancelled) dispatch(setUserData(null));
       } finally {
         if (!cancelled) setChecking(false);
       }
@@ -26,7 +28,7 @@ export default function AuthGate({ children }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [dispatch]);
 
   const content = useMemo(() => {
     if (checking) return null;

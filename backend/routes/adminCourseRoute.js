@@ -11,22 +11,24 @@ import {
 
 const router = express.Router();
 
-const adminOnly = (req, res, next) => {
-  if (req.role !== "admin") return res.status(403).json({ message: "Admin only" });
+const courseManagerOnly = (req, res, next) => {
+  if (!["admin", "manager"].includes(req.role)) {
+    return res.status(403).json({ message: "Admin or manager only" });
+  }
   return next();
 };
 
-router.get("/courses", isAuth, adminOnly, adminGetAllCourses);
-router.get("/courses/:courseId", isAuth, adminOnly, adminGetCourseById);
+router.get("/courses", isAuth, courseManagerOnly, adminGetAllCourses);
+router.get("/courses/:courseId", isAuth, courseManagerOnly, adminGetCourseById);
 
 // create course (thumbnail optional)
-router.post("/courses", isAuth, adminOnly, upload.single("thumbnail"), adminCreateCourse);
+router.post("/courses", isAuth, courseManagerOnly, upload.single("thumbnail"), adminCreateCourse);
 
 // edit course
-router.patch("/courses/:courseId", isAuth, adminOnly, upload.single("thumbnail"), adminEditCourse);
+router.patch("/courses/:courseId", isAuth, courseManagerOnly, upload.single("thumbnail"), adminEditCourse);
 
 // remove course
-router.delete("/courses/:courseId", isAuth, adminOnly, adminRemoveCourse);
+router.delete("/courses/:courseId", isAuth, courseManagerOnly, adminRemoveCourse);
 
 export default router;
 

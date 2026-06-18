@@ -72,7 +72,7 @@ function ManageCourses() {
               <tr>
                 <th className="text-left py-3 px-4">Title</th>
                 <th className="text-left py-3 px-4">Creator</th>
-                <th className="text-left py-3 px-4">Price</th>
+                <th className="text-left py-3 px-4">Materials</th>
                 <th className="text-left py-3 px-4">Status</th>
                 <th className="text-left py-3 px-4">Actions</th>
               </tr>
@@ -82,7 +82,7 @@ function ManageCourses() {
                 <tr key={c._id} className="border-b hover:bg-gray-50 transition">
                   <td className="py-3 px-4 font-medium">{c.title}</td>
                   <td className="py-3 px-4">{c.creator?.name || "-"}</td>
-                  <td className="py-3 px-4">{c.price ?? "NA"}</td>
+                  <td className="py-3 px-4">{c.lectures?.length || 0}</td>
                   <td className="py-3 px-4">
                     <span
                       className={`px-3 py-1 rounded-full text-xs ${

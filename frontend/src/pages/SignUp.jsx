@@ -135,7 +135,7 @@ function SignUp() {
               />
             )}
           </div>
-          <div className="flex md:w-[50%] w-[70%] items-center justify-between">
+          <div className="flex md:w-[70%] w-[80%] items-center justify-center gap-2 flex-wrap">
             <span
               className={`px-[10px] py-[5px] border-[1px] border-[#e7e6e6] rounded-2xl  cursor-pointer ${role === "employee" ? "border-black" : "border-[#646464]"}`}
               onClick={() => setRole("employee")}
@@ -147,6 +147,12 @@ function SignUp() {
               onClick={() => setRole("admin")}
             >
               Admin
+            </span>
+            <span
+              className={`px-[10px] py-[5px] border-[1px] border-[#e7e6e6] rounded-2xl  cursor-pointer ${role === "manager" ? "border-black" : "border-[#646464]"}`}
+              onClick={() => setRole("manager")}
+            >
+              Manager
             </span>
           </div>
           <button

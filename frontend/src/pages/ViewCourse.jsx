@@ -1,375 +1,257 @@
-import axios from 'axios';
-import React, { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
-import { serverUrl } from '../App';
+import axios from "axios";
+import React, { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { serverUrl } from "../App";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import img from "../assets/empty.jpg"
-import Card from "../components/Card.jsx"
-import { setSelectedCourseData } from '../redux/courseSlice';
 import { FaLock, FaPlayCircle } from "react-icons/fa";
-import { toast } from 'react-toastify';
-import { FaStar } from "react-icons/fa6";
-
+import { toast } from "react-toastify";
+import img from "../assets/empty.jpg";
+import Card from "../components/Card.jsx";
 
 function ViewCourse() {
+  const { courseId } = useParams();
+  const navigate = useNavigate();
+  const { courseData } = useSelector((state) => state.course);
+  const { userData } = useSelector((state) => state.user);
+  const [creatorData, setCreatorData] = useState(null);
+  const [selectedLecture, setSelectedLecture] = useState(null);
 
-      const { courseId } = useParams();
-      const navigate = useNavigate()
-    const {courseData} = useSelector(state=>state.course)
-    const {userData} = useSelector(state=>state.user)
-    const [creatorData , setCreatorData] = useState(null)
-    const dispatch = useDispatch()
-    const [selectedLecture, setSelectedLecture] = useState(null);
-    const {lectureData} = useSelector(state=>state.lecture)
-    const {selectedCourseData} = useSelector(state=>state.course)
-  const [selectedCreatorCourse,setSelectedCreatorCourse] = useState([])
-   const [isEnrolled, setIsEnrolled] = useState(false);
-   const [rating, setRating] = useState(0);
-   const [comment, setComment] = useState("");
-   
-   
-  
+  const selectedCourseData = useMemo(
+    () => courseData.find((item) => item._id === courseId),
+    [courseData, courseId]
+  );
 
+  const assignedCourseIds = useMemo(
+    () =>
+      (userData?.enrolledCourses || []).map((course) =>
+        typeof course === "string" ? course : course?._id
+      ),
+    [userData?.enrolledCourses]
+  );
 
-  const handleReview = async () => {
-    try {
-      const result = await axios.post(serverUrl + "/api/review/givereview" , {rating , comment , courseId} , {withCredentials:true})
-      toast.success("Review Added")
-      console.log(result.data)
-      setRating(0)
-      setComment("")
+  const isAssigned = assignedCourseIds.some(
+    (assignedId) => assignedId?.toString() === courseId?.toString()
+  );
+  const canManageLearning = ["admin", "manager"].includes(userData?.role);
 
-    } catch (error) {
-      console.log(error)
-      toast.error(error.response.data.message)
-    }
-  }
-  
+  const relatedCourses = useMemo(() => {
+    if (!creatorData?._id) return [];
+    return courseData.filter(
+      (course) =>
+        course.creator === creatorData._id &&
+        course._id !== courseId &&
+        course.isPublished
+    );
+  }, [creatorData?._id, courseData, courseId]);
 
-  const calculateAverageRating = (reviews) => {
-  if (!reviews || reviews.length === 0) return 0;
-
-  const total = reviews.reduce((sum, review) => sum + review.rating, 0);
-  return (total / reviews.length).toFixed(1); // rounded to 1 decimal
-};
-
-// Usage:
-const avgRating = calculateAverageRating(selectedCourseData?.reviews);
-console.log("Average Rating:", avgRating);
-
-  
-
-  const fetchCourseData = async () => {
-    courseData.map((item) => {
-      if (item._id === courseId) {
-      dispatch(setSelectedCourseData(item))
-        console.log(selectedCourseData)
-      
-
-        return null;
-      }
-
-    })
-
-  }
-    const checkEnrollment = () => {
-  const verify = userData?.enrolledCourses?.some(c => {
-    const enrolledId = typeof c === 'string' ? c : c._id;
-    return enrolledId?.toString() === courseId?.toString();
-  });
-
-  console.log("Enrollment verified:", verify);
-  if (verify) {
-    setIsEnrolled(true);
-  }
-};
-  useEffect(() => {
-    fetchCourseData()
-    checkEnrollment()
-  }, [courseId,courseData,lectureData])
-
-
-    // Fetch creator info once course data is available
   useEffect(() => {
     const getCreator = async () => {
-      if (selectedCourseData?.creator) {
-        try {
-          const result = await axios.post(
-            `${serverUrl}/api/course/getcreator`,
-            { userId: selectedCourseData.creator },
-            { withCredentials: true }
-          );
-          setCreatorData(result.data);
-          console.log(result.data)
-        } catch (error) {
-          console.error("Error fetching creator:", error);
-        }
+      const creatorId =
+        selectedCourseData?.creator?._id || selectedCourseData?.creator;
+
+      if (!creatorId) return;
+
+      try {
+        const result = await axios.post(
+          `${serverUrl}/api/course/getcreator`,
+          { userId: creatorId },
+          { withCredentials: true }
+        );
+        setCreatorData(result.data);
+      } catch (error) {
+        console.error("Error fetching facilitator:", error);
       }
     };
 
     getCreator();
-
-    
   }, [selectedCourseData]);
 
+  const handleStartLearning = () => {
+    if (isAssigned || canManageLearning) {
+      navigate(`/viewlecture/${courseId}`);
+      return;
+    }
 
-   
-
-
-  useEffect(() => {
-  if (creatorData?._id && courseData.length > 0) {
-    const creatorCourses = courseData.filter(
-      (course) =>
-        course.creator === creatorData._id && course._id !== courseId // Exclude current course
-    );
-    setSelectedCreatorCourse(creatorCourses);
-  
-  }
-}, [creatorData, courseData]);
-
- 
-const handleEnroll = async (courseId, userId) => {
-  try {
-    // 1. Create Order
-    const orderData = await axios.post(serverUrl + "/api/payment/create-order", {
-      courseId,
-      userId
-    } , {withCredentials:true});
-    console.log(orderData)
-
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID, // from .env
-      amount: orderData.data.amount,
-      currency: "INR",
-      name: "Knowa Learning ",
-      description: "Course Enrollment Payment",
-      order_id: orderData.data.id,
-      handler: async function (response) {
-  console.log("Razorpay Response:", response);
-  try {
-    const verifyRes = await axios.post(serverUrl + "/api/payment/verify-payment",{
-  ...response,       
-  courseId,
-  userId
-}, { withCredentials: true });
-    
-setIsEnrolled(true)
-    toast.success(verifyRes.data.message);
-  } catch (verifyError) {
-    toast.error("Payment verification failed.");
-    console.error("Verification Error:", verifyError);
-  }
-  },
-    };
-    
-    const rzp = new window.Razorpay(options)
-    rzp.open()
-
-  } catch (err) {
-    toast.error("Something went wrong while enrolling.");
-    console.error("Enroll Error:", err);
-  }
-};
+    toast.info("Ask your Manager or Admin to assign this course to you.");
+  };
 
   return (
-     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto bg-white shadow-md rounded-xl p-6 space-y-6 relative">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      <div className="mx-auto max-w-6xl space-y-6 rounded-xl bg-white p-4 shadow-md sm:p-6">
+        <button
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-black"
+          onClick={() => navigate("/")}
+        >
+          <FaArrowLeftLong className="h-4 w-4" />
+          Home
+        </button>
 
-        {/* Top Section */}
-        <div className="flex flex-col md:flex-row gap-6 ">
-             
-          {/* Thumbnail */}
-          <div className="w-full md:w-1/2">
-             <FaArrowLeftLong  className='text-[black] w-[22px] h-[22px] cursor-pointer' onClick={()=>navigate("/")}/>
-            {selectedCourseData?.thumbnail ? <img
-              src={selectedCourseData?.thumbnail}
-              alt="Course Thumbnail"
-              className="rounded-xl w-full object-cover"
-            /> :  <img
-              src={img}
-              alt="Course Thumbnail"
-              className="rounded-xl  w-full  object-cover"
-            /> }
+        <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <img
+              src={selectedCourseData?.thumbnail || img}
+              alt={selectedCourseData?.title || "Course"}
+              className="h-full max-h-[360px] w-full rounded-lg object-cover"
+            />
           </div>
 
-          {/* Course Info */}
-          <div className="flex-1 space-y-2 mt-[20px]">
-            <h1 className="text-2xl font-bold">{selectedCourseData?.title}</h1>
-            <p className="text-gray-600">{selectedCourseData?.subTitle}</p>
-
-            {/* Rating & Price */}
-            <div className="flex items-start flex-col justify-between">
-              <div className="text-yellow-500 font-medium">
-                ⭐ {avgRating} <span className="text-gray-500">(1,200 reviews)</span>
-              </div>
-              <div>
-                <span className="text-lg font-semibold text-black">{selectedCourseData?.price}</span>{" "}
-                <span className="line-through text-sm text-gray-400">₹599</span>
-              </div>
+          <div className="flex flex-col justify-center space-y-4">
+            <div>
+              <p className="text-sm font-semibold uppercase text-gray-500">
+                Internal Skill Course
+              </p>
+              <h1 className="mt-2 text-2xl font-bold text-gray-900">
+                {selectedCourseData?.title || "Course"}
+              </h1>
+              <p className="mt-2 text-gray-600">{selectedCourseData?.subTitle}</p>
             </div>
 
-            {/* Highlights */}
-            <ul className="text-sm text-gray-700 space-y-1 pt-2">
-              <li>✅ 10+ hours of video content</li>
-              <li>✅ Lifetime access to course materials</li>
-              
+            <div className="flex flex-wrap gap-2 text-sm">
+              <span className="rounded-md bg-gray-100 px-3 py-1 text-gray-700">
+                {selectedCourseData?.category || "Skill"}
+              </span>
+              {selectedCourseData?.level && (
+                <span className="rounded-md bg-gray-100 px-3 py-1 text-gray-700">
+                  {selectedCourseData.level}
+                </span>
+              )}
+              <span className="rounded-md bg-gray-100 px-3 py-1 text-gray-700">
+                {selectedCourseData?.lectures?.length || 0} learning materials
+              </span>
+            </div>
+
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li>Complete assigned PDFs, documents, videos, and learning links.</li>
+              <li>Take quizzes, assignments, puzzles, and course assessments.</li>
+              <li>Earn a verified skill badge after passing the assessment.</li>
+              <li>Failed assessments trigger more learning and a retest path.</li>
             </ul>
 
-            {/* Enroll Button */}
-            {!isEnrolled ?<button className="bg-[black] text-white px-6 py-2 rounded hover:bg-[#82ebe5] hover:text-black  mt-3" onClick={()=>handleEnroll(courseId , userData._id)}>
-              Enroll Now
-            </button> :
-            <button className="bg-green-200 text-green-600 px-6 py-2 rounded hover:bg-gray-100 hover:border mt-3" onClick={()=>navigate(`/viewlecture/${courseId}`)}>
-             Watch Now
+            <button
+              className="w-fit rounded-md bg-black px-6 py-2 text-white hover:bg-gray-800"
+              onClick={handleStartLearning}
+            >
+              {isAssigned || canManageLearning ? "Start Learning" : "Request Assignment"}
             </button>
-            }
           </div>
-        </div>
+        </section>
 
-        {/* What You'll Learn */}
-        <div>
-          <h2 className="text-xl font-semibold mb-2">What You’ll Learn</h2>
-          <ul className="list-disc pl-6 text-gray-700 space-y-1">
-            <li>Learn {selectedCourseData?.category} from Beginning</li>
-            
-          </ul>
-        </div>
+        <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="rounded-lg border border-gray-200 p-5 md:col-span-2">
+            <h2 className="text-xl font-semibold text-gray-900">Course Overview</h2>
+            <p className="mt-3 text-sm leading-6 text-gray-700">
+              {selectedCourseData?.description ||
+                `This course helps employees build and validate practical ${selectedCourseData?.category || "skill"} knowledge within ITRadiant.`}
+            </p>
 
-        {/* Requirements */}
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Requirements</h2>
-          <p className="text-gray-700">Basic programming knowledge is helpful but not required.</p>
-        </div>
-
-        {/* Who This Course Is For */}
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Who This Course is For</h2>
-          <p className="text-gray-700">
-            Beginners, aspiring developers, and professionals looking to upgrade skills.
-          </p>
-        </div>
-
-        {/* course lecture   */}
-         <div className="flex flex-col md:flex-row gap-6">
-  {/* Left Side - Curriculum */}
-  <div className="bg-white w-full md:w-2/5 p-6 rounded-2xl shadow-lg border border-gray-200">
-    <h2 className="text-xl font-bold mb-1 text-gray-800">Course Curriculum</h2>
-    <p className="text-sm text-gray-500 mb-4">{selectedCourseData?.lectures?.length} Lectures</p>
-
-    <div className="flex flex-col gap-3">
-      {selectedCourseData?.lectures?.map((lecture, index) => (
-        <button
-          key={index}
-          disabled={!lecture.isPreviewFree}
-          onClick={() => {
-            if (lecture.isPreviewFree) {
-              setSelectedLecture(lecture);
-            }
-          }}
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg border transition-all duration-200 text-left ${
-            lecture.isPreviewFree
-              ? "hover:bg-gray-100 cursor-pointer border-gray-300"
-              : "cursor-not-allowed opacity-60 border-gray-200"
-          } ${
-            selectedLecture?.lectureTitle === lecture.lectureTitle
-              ? "bg-gray-100 border-gray-400"
-              : ""
-          }`}
-        >
-          <span className="text-lg text-gray-700">
-            {lecture.isPreviewFree ? <FaPlayCircle /> : <FaLock />}
-          </span>
-          <span className="text-sm font-medium text-gray-800">
-            {lecture.lectureTitle}
-          </span>
-        </button>
-      ))}
-    </div>
-  </div>
-
-  {/* Right Side - Video + Info */}
-  <div className="bg-white w-full md:w-3/5 p-6 rounded-2xl shadow-lg border border-gray-200">
-    <div className="aspect-video w-full rounded-lg overflow-hidden mb-4 bg-black flex items-center justify-center">
-      {selectedLecture?.videoUrl ? (
-        <video
-          src={selectedLecture.videoUrl}
-          controls
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <span className="text-white text-sm">Select a preview lecture to watch</span>
-      )}
-    </div>
-
-    <h3 className="text-lg font-semibold text-gray-900 mb-1">
-      {selectedLecture?.lectureTitle || "Lecture Title"}
-    </h3>
-    <p className="text-gray-600 text-sm">
-      {selectedCourseData?.title}
-    </p>
-  </div>
-</div>
-<div className="mt-8 border-t pt-6">
-    <h2 className="text-xl font-semibold mb-2">Write a Review</h2>
-    <div className="mb-4">
-      <div className="flex gap-1 mb-2">
-        {[1, 2, 3, 4, 5].map((star) => (
-         
-            <FaStar  key={star}
-            onClick={() => setRating(star)} className={star <= rating ? "fill-yellow-500" : "fill-gray-300"} />
-         
-        ))}
-      </div>
-      <textarea
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        placeholder="Write your comment here..."
-        className="w-full border border-gray-300 rounded-lg p-2"
-        rows="3"
-      />
-      <button
-        
-        className="bg-black text-white mt-3 px-4 py-2 rounded hover:bg-gray-800" onClick={handleReview}
-      >
-        Submit Review
-      </button>
-    </div>
-
-        {/* Instructor Info */}
-        <div className="flex items-center gap-4 pt-4 border-t ">
-          {creatorData?.photoUrl ?<img
-            src={creatorData?.photoUrl}
-            alt="Instructor"
-            className="w-16 h-16 rounded-full object-cover"
-          />: <img
-            src={img}
-            alt="Instructor"
-            className="w-16 h-16 rounded-full object-cover"
-          />
-          }
-          <div>
-            <h3 className="text-lg font-semibold">{creatorData?.name}</h3>
-            <p className="md:text-sm text-gray-600 text-[10px] ">{creatorData?.description}</p>
-            <p className="md:text-sm text-gray-600 text-[10px] ">{creatorData?.email}</p>
-            
+            <h3 className="mt-6 text-lg font-semibold text-gray-900">
+              What You Will Validate
+            </h3>
+            <ul className="mt-3 list-disc space-y-2 pl-6 text-sm text-gray-700">
+              <li>Core concepts and practical understanding of the skill area.</li>
+              <li>Applied knowledge through assignments and puzzles.</li>
+              <li>Assessment readiness for earning an internal skill badge.</li>
+            </ul>
           </div>
-        </div>
-        <div>
-          <p className='text-xl font-semibold mb-2'>Other Published Courses by the Educator -</p>
-        <div className='w-full transition-all duration-300 py-[20px]   flex items-start justify-center lg:justify-start flex-wrap gap-6 lg:px-[80px] '>
-          
-            {
-                selectedCreatorCourse?.map((item,index)=>(
-                    <Card key={index} thumbnail={item.thumbnail} title={item.title} id={item._id} price={item.price} category={item.category}/>
-                ))
-            }
-        </div>
+
+          <div className="rounded-lg border border-gray-200 p-5">
+            <h2 className="text-xl font-semibold text-gray-900">Facilitator</h2>
+            <div className="mt-4 flex items-center gap-4">
+              <img
+                src={creatorData?.photoUrl || img}
+                alt={creatorData?.name || "Facilitator"}
+                className="h-14 w-14 rounded-full object-cover"
+              />
+              <div>
+                <h3 className="font-semibold text-gray-900">{creatorData?.name || "-"}</h3>
+                <p className="text-sm capitalize text-gray-600">
+                  {creatorData?.role || "manager"}
+                </p>
+              </div>
+            </div>
+            <p className="mt-3 text-sm text-gray-600">{creatorData?.email}</p>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-6 md:grid-cols-5">
+          <div className="rounded-lg border border-gray-200 p-5 md:col-span-2">
+            <h2 className="text-xl font-bold text-gray-800">Learning Materials</h2>
+            <p className="mb-4 mt-1 text-sm text-gray-500">
+              {selectedCourseData?.lectures?.length || 0} items available
+            </p>
+
+            <div className="flex flex-col gap-3">
+              {selectedCourseData?.lectures?.map((lecture, index) => (
+                <button
+                  key={lecture?._id || index}
+                  disabled={!lecture.isPreviewFree}
+                  onClick={() => lecture.isPreviewFree && setSelectedLecture(lecture)}
+                  className={`flex items-center gap-3 rounded-md border px-4 py-3 text-left transition ${
+                    lecture.isPreviewFree
+                      ? "border-gray-300 hover:bg-gray-100"
+                      : "cursor-not-allowed border-gray-200 opacity-60"
+                  } ${
+                    selectedLecture?.lectureTitle === lecture.lectureTitle
+                      ? "border-gray-400 bg-gray-100"
+                      : ""
+                  }`}
+                >
+                  <span className="text-gray-700">
+                    {lecture.isPreviewFree ? <FaPlayCircle /> : <FaLock />}
+                  </span>
+                  <span className="text-sm font-medium text-gray-800">
+                    {lecture.lectureTitle}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 p-5 md:col-span-3">
+            <div className="mb-4 flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black">
+              {selectedLecture?.videoUrl ? (
+                <video
+                  src={selectedLecture.videoUrl}
+                  controls
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-sm text-white">
+                  Select an available learning material to preview
+                </span>
+              )}
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {selectedLecture?.lectureTitle || "Learning Material"}
+            </h3>
+            <p className="text-sm text-gray-600">{selectedCourseData?.title}</p>
+          </div>
+        </section>
+
+        {relatedCourses.length > 0 && (
+          <section className="border-t pt-6">
+            <h2 className="text-xl font-semibold text-gray-900">
+              More Courses from this Facilitator
+            </h2>
+            <div className="flex flex-wrap gap-6 py-5">
+              {relatedCourses.map((item) => (
+                <Card
+                  key={item._id}
+                  thumbnail={item.thumbnail}
+                  title={item.title}
+                  id={item._id}
+                  category={item.category}
+                  level={item.level}
+                  materials={item.lectures?.length || 0}
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
-    </div>
-    </div>
-  )
+  );
 }
 
-export default ViewCourse
+export default ViewCourse;

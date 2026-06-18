@@ -6,7 +6,6 @@ import cookieParser from "cookie-parser"
 import cors from "cors"
 import userRouter from "./routes/userRoute.js"
 import courseRouter from "./routes/courseRoute.js"
-import paymentRouter from "./routes/paymentRoute.js"
 import aiRouter from "./routes/aiRoute.js"
 import reviewRouter from "./routes/reviewRoute.js"
 import adminUserRoute from "./routes/adminUserRoute.js"
@@ -25,7 +24,6 @@ app.use(cors({
 app.use("/api/auth", authRouter)
 app.use("/api/user", userRouter)
 app.use("/api/course", courseRouter)
-app.use("/api/payment", paymentRouter)
 app.use("/api/ai", aiRouter)
 app.use("/api/review", reviewRouter)
 app.use("/api/admin", adminUserRoute)

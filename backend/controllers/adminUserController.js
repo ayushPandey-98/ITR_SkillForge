@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import User from "../models/userModel.js";
 
+const allowedRoles = ["admin", "manager", "employee"];
+
 const sanitizeUser = (user) => {
   // `select(-password)` ensures password isn't returned, but keep safe.
   if (!user) return user;
@@ -22,6 +24,10 @@ export const adminCreateUser = async (req, res) => {
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ message: "name, email, password, role are required" });
+    }
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
     }
 
     const existUser = await User.findOne({ email });
@@ -50,6 +56,9 @@ export const adminUpdateUserRole = async (req, res) => {
     const { role } = req.body;
 
     if (!role) return res.status(400).json({ message: "role is required" });
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
 
     const updated = await User.findByIdAndUpdate(
       userId,
