@@ -16,7 +16,7 @@ function ManageCourses() {
       const res = await axios.get(serverUrl + "/api/admin/courses", {
         withCredentials: true,
       });
-      setCourses(res.data);
+      setCourses(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       toast.error(e?.response?.data?.message || "Failed to load courses");
     } finally {
@@ -26,6 +26,7 @@ function ManageCourses() {
 
   useEffect(() => {
     fetchCourses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const removeCourse = async (courseId) => {
@@ -79,14 +80,19 @@ function ManageCourses() {
             </thead>
             <tbody>
               {courses.map((c) => (
-                <tr key={c._id} className="border-b hover:bg-gray-50 transition">
+                <tr
+                  key={c._id}
+                  className="border-b hover:bg-gray-50 transition"
+                >
                   <td className="py-3 px-4 font-medium">{c.title}</td>
                   <td className="py-3 px-4">{c.creator?.name || "-"}</td>
                   <td className="py-3 px-4">{c.lectures?.length || 0}</td>
                   <td className="py-3 px-4">
                     <span
                       className={`px-3 py-1 rounded-full text-xs ${
-                        c.isPublished ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"
+                        c.isPublished
+                          ? "text-green-700 bg-green-100"
+                          : "text-red-700 bg-red-100"
                       }`}
                     >
                       {c.isPublished ? "Published" : "Draft"}
@@ -101,6 +107,20 @@ function ManageCourses() {
                       Edit
                     </button>
                     <button
+                      className="mr-4 text-green-700 hover:text-green-900"
+                      onClick={() => navigate(`/admin/assign-course/${c._id}`)}
+                      disabled={loading}
+                    >
+                      Assign
+                    </button>
+                    <button
+                      className="mr-4 text-green-700 hover:text-green-900"
+                      onClick={() => navigate(`/createlecture/${c._id}`)}
+                      disabled={loading}
+                    >
+                      Add
+                    </button>
+                    <button
                       className="text-red-600 hover:text-red-800"
                       onClick={() => removeCourse(c._id)}
                       disabled={loading}
@@ -113,7 +133,10 @@ function ManageCourses() {
 
               {courses.length === 0 && (
                 <tr>
-                  <td className="py-10 px-4 text-center text-gray-500" colSpan={5}>
+                  <td
+                    className="py-10 px-4 text-center text-gray-500"
+                    colSpan={5}
+                  >
                     No courses found
                   </td>
                 </tr>

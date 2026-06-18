@@ -111,29 +111,93 @@ export const removeCourse = async (req, res) => {
 
 //create lecture
 
-export const createLecture = async (req,res) => {
-    try {
-        const {lectureTitle}= req.body
-        const {courseId} = req.params
+export const createLecture = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { chapterTitle, lectureTitle, materials, isPreviewFree, test } = req.body;
 
-        if(!lectureTitle || !courseId){
-             return res.status(400).json({message:"Lecture Title required"})
-        }
-        const lecture = await Lecture.create({lectureTitle})
-        const course = await Course.findById(courseId)
-        if(course){
-            course.lectures.push(lecture._id)
-            
-        }
-        await course.populate("lectures")
-        await course.save()
-        return res.status(201).json({lecture,course})
-        
-    } catch (error) {
-        return res.status(500).json({message:`Failed to Create Lecture ${error}`})
+    if (!courseId || !lectureTitle) {
+      return res.status(400).json({ message: "lectureTitle and courseId are required" });
     }
-    
-}
+
+    // materials can come as JSON string from frontend
+    let parsedMaterials = [];
+    if (materials) {
+      if (typeof materials === "string") {
+        parsedMaterials = JSON.parse(materials);
+      } else {
+        parsedMaterials = materials;
+      }
+    }
+
+    // If files are sent (pdf/video), multer should provide req.files.
+    // Expected field names:
+    // - pdfFiles[]
+    // - videoFiles[]
+    // We'll map uploaded files into parsedMaterials where type matches.
+    const files = req.files || {};
+
+    const pdfUploads = files.pdfFiles || [];
+    const videoUploads = files.videoFiles || [];
+
+    let pdfIdx = 0;
+    let videoIdx = 0;
+
+    const finalMaterials = (parsedMaterials || []).map((m) => {
+      const type = m?.type;
+      if (type === "pdf") {
+        const f = pdfUploads[pdfIdx++];
+        if (f) return { ...m, fileUrl: m.fileUrl || f.path };
+      }
+      if (type === "video") {
+        const f = videoUploads[videoIdx++];
+        if (f) return { ...m, fileUrl: m.fileUrl || f.path };
+      }
+      return m;
+    });
+
+    // upload file(s) to cloudinary only for those items that have local fileUrl/path
+    const uploadedMaterials = await Promise.all(
+      finalMaterials.map(async (m) => {
+        if (!m?.fileUrl) return m;
+        // if already a URL (cloudinary) we keep it
+        if (typeof m.fileUrl === "string" && m.fileUrl.startsWith("http")) return m;
+        // otherwise treat as local path
+        const uploaded = await uploadOnCloudinary(m.fileUrl);
+        return {
+          ...m,
+          fileUrl: uploaded?.url || uploaded?.secure_url || uploaded,
+        };
+      })
+    );
+
+    const lecture = await Lecture.create({
+      chapterTitle: chapterTitle || "",
+      lectureTitle,
+      materials: uploadedMaterials || [],
+      isPreviewFree: isPreviewFree === "true" || isPreviewFree === true,
+      test: test || { enabled: false, questions: [] },
+    });
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // ensure lecture isn't duplicated
+    if (!course.lectures.includes(lecture._id)) {
+      course.lectures.push(lecture._id);
+    }
+
+    await course.populate("lectures");
+    await course.save();
+
+    return res.status(201).json({ lecture, course });
+  } catch (error) {
+    return res.status(500).json({ message: `Failed to Create Lecture ${error}` });
+  }
+};
+
 
 export const getCourseLecture = async (req,res) => {
     try {
@@ -150,31 +214,81 @@ export const getCourseLecture = async (req,res) => {
     }
 }
 
-export const editLecture = async (req,res) => {
-    try {
-        const {lectureId} = req.params
-        const {isPreviewFree , lectureTitle} = req.body
-        const lecture = await Lecture.findById(lectureId)
-          if(!lecture){
-            return res.status(404).json({message:"Lecture not found"})
-        }
-        let videoUrl
-        if(req.file){
-            videoUrl =await uploadOnCloudinary(req.file.path)
-            lecture.videoUrl = videoUrl
-                }
-        if(lectureTitle){
-            lecture.lectureTitle = lectureTitle
-        }
-        lecture.isPreviewFree = isPreviewFree
-        
-         await lecture.save()
-        return res.status(200).json(lecture)
-    } catch (error) {
-        return res.status(500).json({message:`Failed to edit Lectures ${error}`})
+export const editLecture = async (req, res) => {
+  try {
+    const { lectureId } = req.params;
+    const {
+      isPreviewFree,
+      lectureTitle,
+      chapterTitle,
+      materials,
+      test,
+    } = req.body;
+
+    const lecture = await Lecture.findById(lectureId);
+    if (!lecture) {
+      return res.status(404).json({ message: "Lecture not found" });
     }
-    
-}
+
+    // Parse materials JSON string
+    let parsedMaterials = [];
+    if (materials) {
+      if (typeof materials === "string") {
+        parsedMaterials = JSON.parse(materials);
+      } else {
+        parsedMaterials = materials;
+      }
+    };
+
+    const files = req.files || {};
+    const pdfUploads = files.pdfFiles || [];
+    const videoUploads = files.videoFiles || [];
+
+    let pdfIdx = 0;
+    let videoIdx = 0;
+
+    const finalMaterials = (parsedMaterials || []).map((m) => {
+      const type = m?.type;
+      if (type === "pdf") {
+        const f = pdfUploads[pdfIdx++];
+        if (f) return { ...m, fileUrl: m.fileUrl || f.path };
+      }
+      if (type === "video") {
+        const f = videoUploads[videoIdx++];
+        if (f) return { ...m, fileUrl: m.fileUrl || f.path };
+      }
+      return m;
+    });
+
+    const uploadedMaterials = await Promise.all(
+      finalMaterials.map(async (m) => {
+        if (!m?.fileUrl) return m;
+        if (typeof m.fileUrl === "string" && m.fileUrl.startsWith("http")) return m;
+        const uploaded = await uploadOnCloudinary(m.fileUrl);
+        return {
+          ...m,
+          fileUrl: uploaded?.url || uploaded?.secure_url || uploaded,
+        };
+      })
+    );
+
+    if (lectureTitle) lecture.lectureTitle = lectureTitle;
+    if (chapterTitle !== undefined) lecture.chapterTitle = chapterTitle;
+    if (Array.isArray(uploadedMaterials)) lecture.materials = uploadedMaterials;
+
+    if (isPreviewFree !== undefined) {
+      lecture.isPreviewFree = isPreviewFree === "true" || isPreviewFree === true;
+    }
+
+    if (test !== undefined) lecture.test = test;
+
+    await lecture.save();
+    return res.status(200).json(lecture);
+  } catch (error) {
+    return res.status(500).json({ message: `Failed to edit Lectures ${error}` });
+  }
+};
+
 
 export const removeLecture = async (req,res) => {
     try {

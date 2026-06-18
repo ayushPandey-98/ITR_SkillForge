@@ -62,15 +62,17 @@ function Dashboard() {
         name: shortCourseName(course?.title),
         materials: course?.lectures?.length || 0,
       })),
-    [courses]
+    [courses],
   );
 
   const totalCourses = courses.length;
   const totalMaterials = courses.reduce(
     (sum, course) => sum + (course?.lectures?.length || 0),
-    0
+    0,
   );
-  const publishedCourses = courses.filter((course) => course?.isPublished).length;
+  const publishedCourses = courses.filter(
+    (course) => course?.isPublished,
+  ).length;
   const draftCourses = totalCourses - publishedCourses;
 
   const stats = canManageLearning
@@ -123,18 +125,18 @@ function Dashboard() {
         "Track progress, scores, badges, and reports.",
       ]
     : isManager
-    ? [
-        "Manage employees under your team.",
-        "Create and assign courses, skills, quizzes, assignments, and assessments.",
-        "Monitor team progress and performance.",
-        "Manager accounts cannot create Admin or Manager users.",
-      ]
-    : [
-        "View assigned skills and courses.",
-        "Complete learning materials and assessments.",
-        "Earn verified skill badges after passing assessments.",
-        "Use failed attempts to trigger additional learning and retests.",
-      ];
+      ? [
+          "Manage employees under your team.",
+          "Create and assign courses, skills, quizzes, assignments, and assessments.",
+          "Monitor team progress and performance.",
+          "Manager accounts cannot create Admin or Manager users.",
+        ]
+      : [
+          "View assigned skills and courses.",
+          "Complete learning materials and assessments.",
+          "Earn verified skill badges after passing assessments.",
+          "Use failed attempts to trigger additional learning and retests.",
+        ];
 
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-6 sm:px-6">
@@ -174,14 +176,18 @@ function Dashboard() {
               className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
             >
               <p className="text-sm text-gray-500">{item.label}</p>
-              <p className="mt-3 text-3xl font-bold text-gray-900">{item.value}</p>
+              <p className="mt-3 text-3xl font-bold text-gray-900">
+                {item.value}
+              </p>
             </div>
           ))}
         </section>
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm lg:col-span-2">
-            <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Quick Actions
+            </h2>
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {quickActions.map((action) => (
                 <button
@@ -204,7 +210,10 @@ function Dashboard() {
             <h2 className="text-lg font-semibold text-gray-900">Role Focus</h2>
             <div className="mt-4 space-y-3">
               {responsibilities.map((item) => (
-                <div key={item} className="flex gap-3 text-sm leading-5 text-gray-700">
+                <div
+                  key={item}
+                  className="flex gap-3 text-sm leading-5 text-gray-700"
+                >
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-black" />
                   <span>{item}</span>
                 </div>
@@ -243,14 +252,20 @@ function Dashboard() {
                   <XAxis dataKey="name" />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="materials" fill="#111827" radius={[4, 4, 0, 0]} />
+                  <Bar
+                    dataKey="materials"
+                    fill="#111827"
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </section>
           )
         ) : (
           <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900">Learning Path</h2>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Learning Path
+            </h2>
             <p className="mt-2 text-sm leading-6 text-gray-600">
               Complete assigned course materials, take assessments, and earn
               verified skill badges. Failed assessments should guide you to

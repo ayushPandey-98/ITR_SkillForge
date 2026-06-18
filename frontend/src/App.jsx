@@ -18,9 +18,12 @@ import EditLecture from "./pages/admin/EditLecture";
 import Users from "./pages/admin/Users";
 import ManageCourses from "./pages/admin/ManageCourses";
 import AdminCreateCourse from "./pages/admin/AdminCreateCourse";
+import AssignCourseToEmployees from "./pages/admin/AssignCourseToEmployees.jsx";
+
 
 
 import getCouseData from "./customHooks/getCouseData";
+
 import ViewCourse from "./pages/ViewCourse";
 import ScrollToTop from "./components/ScrollToTop";
 import getCreatorCourseData from "./customHooks/getCreatorCourseData";
@@ -167,7 +170,20 @@ function App() {
           <Route path="/admin/users" element={isAdmin ? <Users /> : <Navigate to="/dashboard" replace />} />
           <Route path="/admin/courses" element={canManageCourses ? <ManageCourses /> : <Navigate to="/dashboard" replace />} />
           <Route path="/admin/create-course" element={canManageCourses ? <AdminCreateCourse /> : <Navigate to="/dashboard" replace />} />
-          <Route path="/admin/edit-course/:courseId" element={canManageCourses ? <AdminCreateCourse /> : <Navigate to="/dashboard" replace />} />
+          <Route
+            path="/admin/edit-course/:courseId"
+            element={
+              canManageCourses ? (
+                <AdminCreateCourse />
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
+            }
+          />
+          <Route
+            path="/admin/assign-course/:courseId"
+            element={isAdmin ? <AssignCourseToEmployees /> : <Navigate to="/dashboard" replace />}
+          />
 
           <Route path="/forgotpassword" element={<ForgotPassword />} />
         </Routes>

@@ -10,6 +10,8 @@ import aiRouter from "./routes/aiRoute.js"
 import reviewRouter from "./routes/reviewRoute.js"
 import adminUserRoute from "./routes/adminUserRoute.js"
 import adminCourseRoute from "./routes/adminCourseRoute.js"
+import adminAssignmentRoute from "./routes/adminAssignmentRoute.js"
+
 
 dotenv.config()
 
@@ -28,6 +30,9 @@ app.use("/api/ai", aiRouter)
 app.use("/api/review", reviewRouter)
 app.use("/api/admin", adminUserRoute)
 app.use("/api/admin", adminCourseRoute)
+app.use("/api/admin", adminAssignmentRoute)
+
+
 
 
 app.get("/" , (req,res)=>{

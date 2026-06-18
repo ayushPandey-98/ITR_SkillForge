@@ -176,10 +176,11 @@ function ViewCourse() {
 
         <section className="grid grid-cols-1 gap-6 md:grid-cols-5">
           <div className="rounded-lg border border-gray-200 p-5 md:col-span-2">
-            <h2 className="text-xl font-bold text-gray-800">Learning Materials</h2>
+              <h2 className="text-xl font-bold text-gray-800">Learning Materials</h2>
             <p className="mb-4 mt-1 text-sm text-gray-500">
-              {selectedCourseData?.lectures?.length || 0} items available
+              {selectedCourseData?.lectures?.length || 0} chapters / items available
             </p>
+
 
             <div className="flex flex-col gap-3">
               {selectedCourseData?.lectures?.map((lecture, index) => (
@@ -209,24 +210,70 @@ function ViewCourse() {
           </div>
 
           <div className="rounded-lg border border-gray-200 p-5 md:col-span-3">
-            <div className="mb-4 flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black">
-              {selectedLecture?.videoUrl ? (
-                <video
-                  src={selectedLecture.videoUrl}
-                  controls
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="text-sm text-white">
-                  Select an available learning material to preview
-                </span>
-              )}
+              <div className="mb-4 flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black">
+                {(() => {
+                  const firstMaterial = selectedLecture?.materials?.[0];
+                  if (!firstMaterial) {
+                    return (
+                      <span className="text-sm text-white">
+                        Select an available learning material to preview
+                      </span>
+                    );
+                  }
+
+                  if (firstMaterial.type === "video" && firstMaterial.fileUrl) {
+                    return (
+                      <video
+                        src={firstMaterial.fileUrl}
+                        controls
+                        className="h-full w-full object-cover"
+                      />
+                    );
+                  }
+
+                  if (firstMaterial.type === "videoLink" && firstMaterial.videoLink) {
+                    return (
+                      <div className="p-4 text-center">
+                        <p className="text-sm text-white mb-2">Video link</p>
+                        <a
+                          className="underline text-white break-all"
+                          href={firstMaterial.videoLink}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {firstMaterial.videoLink}
+                        </a>
+                      </div>
+                    );
+                  }
+
+                  if (firstMaterial.type === "pdf" && firstMaterial.fileUrl) {
+                    return (
+                      <div className="p-4 text-center">
+                        <p className="text-sm text-white mb-2">PDF available</p>
+                        <a
+                          className="underline text-white break-all"
+                          href={firstMaterial.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open PDF
+                        </a>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <span className="text-sm text-white">No preview available</span>
+                  );
+                })()}
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {selectedLecture?.lectureTitle || "Learning Material"}
+              </h3>
+              <p className="text-sm text-gray-600">{selectedCourseData?.title}</p>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              {selectedLecture?.lectureTitle || "Learning Material"}
-            </h3>
-            <p className="text-sm text-gray-600">{selectedCourseData?.title}</p>
-          </div>
+
         </section>
 
         {relatedCourses.length > 0 && (

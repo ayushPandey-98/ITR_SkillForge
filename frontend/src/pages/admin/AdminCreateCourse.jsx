@@ -40,9 +40,12 @@ function AdminCreateCourse() {
         }
 
         if (courseId) {
-          const courseRes = await axios.get(serverUrl + `/api/admin/courses/${courseId}`, {
-            withCredentials: true,
-          });
+          const courseRes = await axios.get(
+            serverUrl + `/api/admin/courses/${courseId}`,
+            {
+              withCredentials: true,
+            },
+          );
           const course = courseRes.data;
           setForm({
             title: course?.title || "",
@@ -87,7 +90,11 @@ function AdminCreateCourse() {
       };
 
       if (isEditMode) {
-        await axios.patch(serverUrl + `/api/admin/courses/${courseId}`, fd, requestConfig);
+        await axios.patch(
+          serverUrl + `/api/admin/courses/${courseId}`,
+          fd,
+          requestConfig,
+        );
         toast.success("Course updated");
       } else {
         await axios.post(serverUrl + "/api/admin/courses", fd, requestConfig);
@@ -106,19 +113,36 @@ function AdminCreateCourse() {
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6">
       <div className="max-w-2xl mx-auto bg-white rounded-xl shadow p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-6">
-          <FaArrowLeftLong className="w-[22px] h-[22px] cursor-pointer" onClick={() => navigate("/admin/courses")} />
-          <h1 className="text-xl font-semibold">{isEditMode ? "Edit Course" : "Add Course"}</h1>
+          <FaArrowLeftLong
+            className="w-[22px] h-[22px] cursor-pointer"
+            onClick={() => navigate("/admin/courses")}
+          />
+          <h1 className="text-xl font-semibold">
+            {isEditMode ? "Edit Course" : "Add Course"}
+          </h1>
         </div>
 
         <form onSubmit={submit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Title</label>
-            <input className="w-full border border-gray-300 rounded-md px-3 py-2" value={form.title} onChange={(e)=>setForm(p=>({...p,title:e.target.value}))} />
+            <input
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              value={form.title}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, title: e.target.value }))
+              }
+            />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Category</label>
-              <select className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white" value={form.category} onChange={(e)=>setForm(p=>({...p,category:e.target.value}))}>
+              <select
+                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+                value={form.category}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, category: e.target.value }))
+                }
+              >
                 <option value="">Select</option>
                 <option>App Development</option>
                 <option>AI/ML</option>
@@ -133,10 +157,18 @@ function AdminCreateCourse() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Creator</label>
-              <select className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white" value={form.creator} onChange={(e)=>setForm(p=>({...p,creator:e.target.value}))}>
+              <select
+                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+                value={form.creator}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, creator: e.target.value }))
+                }
+              >
                 <option value="">Select user</option>
-                {users.map(u=> (
-                  <option key={u._id} value={u._id}>{u.name} ({u.role})</option>
+                {users.map((u) => (
+                  <option key={u._id} value={u._id}>
+                    {u.name} ({u.role})
+                  </option>
                 ))}
               </select>
             </div>
@@ -144,17 +176,39 @@ function AdminCreateCourse() {
 
           <div>
             <label className="block text-sm font-medium mb-1">Sub Title</label>
-            <input className="w-full border border-gray-300 rounded-md px-3 py-2" value={form.subTitle} onChange={(e)=>setForm(p=>({...p,subTitle:e.target.value}))} />
+            <input
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              value={form.subTitle}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, subTitle: e.target.value }))
+              }
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea className="w-full border border-gray-300 rounded-md px-3 py-2 h-24 resize-none" value={form.description} onChange={(e)=>setForm(p=>({...p,description:e.target.value}))} />
+            <label className="block text-sm font-medium mb-1">
+              Description
+            </label>
+            <textarea
+              className="w-full border border-gray-300 rounded-md px-3 py-2 h-24 resize-none"
+              value={form.description}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, description: e.target.value }))
+              }
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Skill Level</label>
-            <select className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white" value={form.level} onChange={(e)=>setForm(p=>({...p,level:e.target.value}))}>
+            <label className="block text-sm font-medium mb-1">
+              Skill Level
+            </label>
+            <select
+              className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+              value={form.level}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, level: e.target.value }))
+              }
+            >
               <option value="">Select</option>
               <option>Beginner</option>
               <option>Intermediate</option>
@@ -163,18 +217,47 @@ function AdminCreateCourse() {
           </div>
 
           <div className="flex items-center gap-3">
-            <input type="checkbox" checked={form.isPublished} onChange={(e)=>setForm(p=>({...p,isPublished:e.target.checked}))} />
+            <input
+              type="checkbox"
+              checked={form.isPublished}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, isPublished: e.target.checked }))
+              }
+            />
             <span>Publish now</span>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Course Image (optional)</label>
-            <input type="file" accept="image/*" onChange={(e)=>setForm(p=>({...p,thumbnail:e.target.files?.[0]||null}))} />
+            <label className="block text-sm font-medium mb-1">
+              Course Image (optional)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  thumbnail: e.target.files?.[0] || null,
+                }))
+              }
+            />
           </div>
 
           <div className="flex justify-end gap-3">
-            <button type="button" className="px-4 py-2 rounded-md border border-gray-300" onClick={()=>navigate("/admin/courses")}>Cancel</button>
-            <button type="submit" disabled={loading} className="bg-black text-white px-5 py-2 rounded-md disabled:opacity-60">{loading?"Please wait...":isEditMode ? "Update" : "Create"}</button>
+            <button
+              type="button"
+              className="px-4 py-2 rounded-md border border-gray-300"
+              onClick={() => navigate("/admin/courses")}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-black text-white px-5 py-2 rounded-md disabled:opacity-60"
+            >
+              {loading ? "Please wait..." : isEditMode ? "Update" : "Create"}
+            </button>
           </div>
         </form>
       </div>
@@ -183,4 +266,3 @@ function AdminCreateCourse() {
 }
 
 export default AdminCreateCourse;
-

@@ -12,6 +12,7 @@ import { setCourseData } from '../../redux/courseSlice';
 function AddCourses() {
     const navigate= useNavigate()
     const {courseId} = useParams()
+
    
     
     const [selectedCourse,setSelectedCourse] = useState(null)
@@ -139,7 +140,15 @@ const editCourseHandler = async () => {
         <FaArrowLeftLong  className='top-[-20%] md:top-[20%] absolute left-[0] md:left-[2%] w-[22px] h-[22px] cursor-pointer' onClick={()=>navigate("/courses")}/>
         <h2 className="text-2xl font-semibold md:pl-[60px]">Add detail information regarding course</h2>
         <div className="space-x-2 space-y-2 ">
-          <button className="bg-black text-white px-4 py-2 rounded-md" onClick={()=>navigate(`/createlecture/${selectedCourse?._id}`)}>Go to lectures page</button>
+          <button
+            className="bg-black text-white px-4 py-2 rounded-md disabled:opacity-60"
+            disabled={!courseId}
+            onClick={()=>navigate(`/createlecture/${courseId}`)}
+          >
+            Add Lecture / Materials
+          </button>
+          
+
           
         </div>
       </div>
@@ -155,9 +164,16 @@ const editCourseHandler = async () => {
         </div>
 
         <form className="space-y-6" onSubmit={(e)=>e.preventDefault()}>
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-lg font-medium">Basic Course Information</h3>
+            <div className="text-sm text-gray-600">
+              {(selectedCourse?.lectures?.length ?? 0)} lectures/chapter(s)
+            </div>
+          </div>
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+
             <input type="text" placeholder="Course Title" className="w-full border px-4 py-2 rounded-md" onChange={(e)=>setTitle(e.target.value)} value={title}/>
           </div>
 

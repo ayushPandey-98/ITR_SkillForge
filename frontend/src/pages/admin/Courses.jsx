@@ -88,6 +88,12 @@ function Courses() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
+                    <button
+                      className="mr-3 rounded bg-black px-3 py-1 text-xs text-white hover:bg-gray-700"
+                      onClick={() => navigate(`/addcourses/${course?._id}`)}
+                    >
+                      Add Lectures
+                    </button>
                     <FaEdit
                       className="cursor-pointer text-gray-600 hover:text-blue-600"
                       onClick={() => navigate(`/addcourses/${course?._id}`)}
@@ -117,10 +123,18 @@ function Courses() {
                     {course?.lectures?.length || 0} materials
                   </p>
                 </div>
-                <FaEdit
-                  className="cursor-pointer text-gray-600 hover:text-blue-600"
-                  onClick={() => navigate(`/addcourses/${course?._id}`)}
-                />
+                <div className="flex items-center gap-2">
+                  <button
+                    className="rounded bg-black px-3 py-1 text-xs text-white hover:bg-gray-700"
+                    onClick={() => navigate(`/addcourses/${course?._id}`)}
+                  >
+                    Add Lectures
+                  </button>
+                  <FaEdit
+                    className="cursor-pointer text-gray-600 hover:text-blue-600"
+                    onClick={() => navigate(`/addcourses/${course?._id}`)}
+                  />
+                </div>
               </div>
               <span
                 className={`w-fit rounded-full px-3 py-1 text-xs ${

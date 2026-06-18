@@ -18,9 +18,31 @@ courseRouter.get("/getcreatorcourses",isAuth,courseManagerOnly,getCreatorCourses
 courseRouter.post("/editcourse/:courseId",isAuth,courseManagerOnly,upload.single("thumbnail"),editCourse)
 courseRouter.get("/getcourse/:courseId",isAuth,getCourseById)
 courseRouter.delete("/removecourse/:courseId",isAuth,courseManagerOnly,removeCourse)
-courseRouter.post("/createlecture/:courseId",isAuth,courseManagerOnly,createLecture)
+courseRouter.post(
+  "/createlecture/:courseId",
+  isAuth,
+  courseManagerOnly,
+  upload.fields([
+    { name: "pdfFiles", maxCount: 10 },
+    { name: "videoFiles", maxCount: 10 },
+  ]),
+  createLecture
+);
+
 courseRouter.get("/getcourselecture/:courseId",isAuth,getCourseLecture)
-courseRouter.post("/editlecture/:lectureId",isAuth,courseManagerOnly,upload.single("videoUrl"),editLecture)
+courseRouter.post(
+  "/editlecture/:lectureId",
+  isAuth,
+  courseManagerOnly,
+  upload.fields([
+    { name: "pdfFiles", maxCount: 10 },
+    { name: "videoFiles", maxCount: 10 },
+    // keep backward compatible for old single field (optional)
+    { name: "videoUrl", maxCount: 1 },
+  ]),
+  editLecture
+)
+
 courseRouter.delete("/removelecture/:lectureId",isAuth,courseManagerOnly,removeLecture)
 courseRouter.post("/getcreator",isAuth,getCreatorById)
 
