@@ -19,19 +19,19 @@ function ViewCourse() {
 
   const selectedCourseData = useMemo(
     () => courseData.find((item) => item._id === courseId),
-    [courseData, courseId]
+    [courseData, courseId],
   );
 
   const assignedCourseIds = useMemo(
     () =>
       (userData?.enrolledCourses || []).map((course) =>
-        typeof course === "string" ? course : course?._id
+        typeof course === "string" ? course : course?._id,
       ),
-    [userData?.enrolledCourses]
+    [userData?.enrolledCourses],
   );
 
   const isAssigned = assignedCourseIds.some(
-    (assignedId) => assignedId?.toString() === courseId?.toString()
+    (assignedId) => assignedId?.toString() === courseId?.toString(),
   );
   const canManageLearning = ["admin", "manager"].includes(userData?.role);
 
@@ -41,7 +41,7 @@ function ViewCourse() {
       (course) =>
         course.creator === creatorData._id &&
         course._id !== courseId &&
-        course.isPublished
+        course.isPublished,
     );
   }, [creatorData?._id, courseData, courseId]);
 
@@ -56,7 +56,7 @@ function ViewCourse() {
         const result = await axios.post(
           `${serverUrl}/api/course/getcreator`,
           { userId: creatorId },
-          { withCredentials: true }
+          { withCredentials: true },
         );
         setCreatorData(result.data);
       } catch (error) {
@@ -104,7 +104,9 @@ function ViewCourse() {
               <h1 className="mt-2 text-2xl font-bold text-gray-900">
                 {selectedCourseData?.title || "Course"}
               </h1>
-              <p className="mt-2 text-gray-600">{selectedCourseData?.subTitle}</p>
+              <p className="mt-2 text-gray-600">
+                {selectedCourseData?.subTitle}
+              </p>
             </div>
 
             <div className="flex flex-wrap gap-2 text-sm">
@@ -122,24 +124,34 @@ function ViewCourse() {
             </div>
 
             <ul className="space-y-2 text-sm text-gray-700">
-              <li>Complete assigned PDFs, documents, videos, and learning links.</li>
-              <li>Take quizzes, assignments, puzzles, and course assessments.</li>
+              <li>
+                Complete assigned PDFs, documents, videos, and learning links.
+              </li>
+              <li>
+                Take quizzes, assignments, puzzles, and course assessments.
+              </li>
               <li>Earn a verified skill badge after passing the assessment.</li>
-              <li>Failed assessments trigger more learning and a retest path.</li>
+              <li>
+                Failed assessments trigger more learning and a retest path.
+              </li>
             </ul>
 
             <button
               className="w-fit rounded-md bg-black px-6 py-2 text-white hover:bg-gray-800"
               onClick={handleStartLearning}
             >
-              {isAssigned || canManageLearning ? "Start Learning" : "Request Assignment"}
+              {isAssigned || canManageLearning
+                ? "Start Learning"
+                : "Request Assignment"}
             </button>
           </div>
         </section>
 
         <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="rounded-lg border border-gray-200 p-5 md:col-span-2">
-            <h2 className="text-xl font-semibold text-gray-900">Course Overview</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Course Overview
+            </h2>
             <p className="mt-3 text-sm leading-6 text-gray-700">
               {selectedCourseData?.description ||
                 `This course helps employees build and validate practical ${selectedCourseData?.category || "skill"} knowledge within ITRadiant.`}
@@ -149,7 +161,9 @@ function ViewCourse() {
               What You Will Validate
             </h3>
             <ul className="mt-3 list-disc space-y-2 pl-6 text-sm text-gray-700">
-              <li>Core concepts and practical understanding of the skill area.</li>
+              <li>
+                Core concepts and practical understanding of the skill area.
+              </li>
               <li>Applied knowledge through assignments and puzzles.</li>
               <li>Assessment readiness for earning an internal skill badge.</li>
             </ul>
@@ -164,7 +178,9 @@ function ViewCourse() {
                 className="h-14 w-14 rounded-full object-cover"
               />
               <div>
-                <h3 className="font-semibold text-gray-900">{creatorData?.name || "-"}</h3>
+                <h3 className="font-semibold text-gray-900">
+                  {creatorData?.name || "-"}
+                </h3>
                 <p className="text-sm capitalize text-gray-600">
                   {creatorData?.role || "manager"}
                 </p>
@@ -176,18 +192,22 @@ function ViewCourse() {
 
         <section className="grid grid-cols-1 gap-6 md:grid-cols-5">
           <div className="rounded-lg border border-gray-200 p-5 md:col-span-2">
-              <h2 className="text-xl font-bold text-gray-800">Learning Materials</h2>
+            <h2 className="text-xl font-bold text-gray-800">
+              Learning Materials
+            </h2>
             <p className="mb-4 mt-1 text-sm text-gray-500">
-              {selectedCourseData?.lectures?.length || 0} chapters / items available
+              {selectedCourseData?.lectures?.length || 0} chapters / items
+              available
             </p>
-
 
             <div className="flex flex-col gap-3">
               {selectedCourseData?.lectures?.map((lecture, index) => (
                 <button
                   key={lecture?._id || index}
                   disabled={!lecture.isPreviewFree}
-                  onClick={() => lecture.isPreviewFree && setSelectedLecture(lecture)}
+                  onClick={() =>
+                    lecture.isPreviewFree && setSelectedLecture(lecture)
+                  }
                   className={`flex items-center gap-3 rounded-md border px-4 py-3 text-left transition ${
                     lecture.isPreviewFree
                       ? "border-gray-300 hover:bg-gray-100"
@@ -210,70 +230,74 @@ function ViewCourse() {
           </div>
 
           <div className="rounded-lg border border-gray-200 p-5 md:col-span-3">
-              <div className="mb-4 flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black">
-                {(() => {
-                  const firstMaterial = selectedLecture?.materials?.[0];
-                  if (!firstMaterial) {
-                    return (
-                      <span className="text-sm text-white">
-                        Select an available learning material to preview
-                      </span>
-                    );
-                  }
-
-                  if (firstMaterial.type === "video" && firstMaterial.fileUrl) {
-                    return (
-                      <video
-                        src={firstMaterial.fileUrl}
-                        controls
-                        className="h-full w-full object-cover"
-                      />
-                    );
-                  }
-
-                  if (firstMaterial.type === "videoLink" && firstMaterial.videoLink) {
-                    return (
-                      <div className="p-4 text-center">
-                        <p className="text-sm text-white mb-2">Video link</p>
-                        <a
-                          className="underline text-white break-all"
-                          href={firstMaterial.videoLink}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {firstMaterial.videoLink}
-                        </a>
-                      </div>
-                    );
-                  }
-
-                  if (firstMaterial.type === "pdf" && firstMaterial.fileUrl) {
-                    return (
-                      <div className="p-4 text-center">
-                        <p className="text-sm text-white mb-2">PDF available</p>
-                        <a
-                          className="underline text-white break-all"
-                          href={firstMaterial.fileUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open PDF
-                        </a>
-                      </div>
-                    );
-                  }
-
+            <div className="mb-4 flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black">
+              {(() => {
+                const firstMaterial = selectedLecture?.materials?.[0];
+                if (!firstMaterial) {
                   return (
-                    <span className="text-sm text-white">No preview available</span>
+                    <span className="text-sm text-white">
+                      Select an available learning material to preview
+                    </span>
                   );
-                })()}
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                {selectedLecture?.lectureTitle || "Learning Material"}
-              </h3>
-              <p className="text-sm text-gray-600">{selectedCourseData?.title}</p>
-            </div>
+                }
 
+                if (firstMaterial.type === "video" && firstMaterial.fileUrl) {
+                  return (
+                    <video
+                      src={firstMaterial.fileUrl}
+                      controls
+                      className="h-full w-full object-cover"
+                    />
+                  );
+                }
+
+                if (
+                  firstMaterial.type === "videoLink" &&
+                  firstMaterial.videoLink
+                ) {
+                  return (
+                    <div className="p-4 text-center">
+                      <p className="text-sm text-white mb-2">Video link</p>
+                      <a
+                        className="underline text-white break-all"
+                        href={firstMaterial.videoLink}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {firstMaterial.videoLink}
+                      </a>
+                    </div>
+                  );
+                }
+
+                if (firstMaterial.type === "pdf" && firstMaterial.fileUrl) {
+                  return (
+                    <div className="p-4 text-center">
+                      <p className="text-sm text-white mb-2">PDF available</p>
+                      <a
+                        className="underline text-white break-all"
+                        href={firstMaterial.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Open PDF
+                      </a>
+                    </div>
+                  );
+                }
+
+                return (
+                  <span className="text-sm text-white">
+                    No preview available
+                  </span>
+                );
+              })()}
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {selectedLecture?.lectureTitle || "Learning Material"}
+            </h3>
+            <p className="text-sm text-gray-600">{selectedCourseData?.title}</p>
+          </div>
         </section>
 
         {relatedCourses.length > 0 && (

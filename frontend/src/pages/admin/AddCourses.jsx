@@ -77,7 +77,7 @@ const editCourseHandler = async () => {
   formData.append("description", description);
   formData.append("category", category);
   formData.append("level", level);
-  formData.append("price", price);
+
   formData.append("thumbnail", backendImage);
   formData.append("isPublished", isPublished);
 
@@ -220,11 +220,6 @@ const editCourseHandler = async () => {
               </select>
             </div>
 
-            {/* Price */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Price (INR)</label>
-              <input type="number" placeholder="₹" className="w-full border px-4 py-2 rounded-md" onChange={(e)=>setPrice(e.target.value)} value={price} />
-            </div>
           </div>
 
           {/* Thumbnail */}

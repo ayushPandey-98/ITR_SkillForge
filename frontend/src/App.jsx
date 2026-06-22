@@ -14,15 +14,19 @@ import AllCouses from "./pages/AllCouses";
 import AddCourses from "./pages/admin/AddCourses";
 import CreateCourse from "./pages/admin/CreateCourse";
 import CreateLecture from "./pages/admin/CreateLecture";
+import CreateCourseContent from "./pages/admin/CreateCourseContent";
 import EditLecture from "./pages/admin/EditLecture";
 import Users from "./pages/admin/Users";
 import ManageCourses from "./pages/admin/ManageCourses";
 import AdminCreateCourse from "./pages/admin/AdminCreateCourse";
 import AssignCourseToEmployees from "./pages/admin/AssignCourseToEmployees.jsx";
+import Reports from "./pages/Reports.jsx";
+
 
 
 
 import getCouseData from "./customHooks/getCouseData";
+
 
 import ViewCourse from "./pages/ViewCourse";
 import ScrollToTop from "./components/ScrollToTop";
@@ -33,8 +37,10 @@ import SearchWithAi from "./pages/SearchWithAi";
 import getAllReviews from "./customHooks/getAllReviews";
 import AuthGate from "./auth/AuthGate";
 import LoginRedirect from "./auth/LoginRedirect";
+import DashboardLayout from "./components/layout/DashboardLayout";
 
 export const serverUrl = "http://localhost:8000";
+
 
 function App() {
   let { userData } = useSelector((state) => state.user);
@@ -110,23 +116,29 @@ function App() {
             path="/dashboard"
             element={
               userData ? (
-                <Dashboard />
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
               ) : (
                 <Navigate to="/signup" replace />
               )
             }
           />
 
+
           <Route
             path="/courses"
             element={
-              canManageCourses ? (
-                <Courses />
+              userData ? (
+                <DashboardLayout>
+                  <Courses />
+                </DashboardLayout>
               ) : (
                 <Navigate to="/signup" replace />
               )
             }
           />
+
           <Route
             path="/addcourses/:courseId"
             element={
@@ -142,6 +154,18 @@ function App() {
             element={
               canManageCourses ? (
                 <CreateCourse />
+              ) : (
+                <Navigate to="/signup" replace />
+              )
+            }
+          />
+          <Route
+            path="/createcontent/:courseId"
+            element={
+              canManageCourses ? (
+                <DashboardLayout>
+                  <CreateCourseContent />
+                </DashboardLayout>
               ) : (
                 <Navigate to="/signup" replace />
               )
@@ -167,22 +191,73 @@ function App() {
               )
             }
           />
-          <Route path="/admin/users" element={isAdmin ? <Users /> : <Navigate to="/dashboard" replace />} />
-          <Route path="/admin/courses" element={canManageCourses ? <ManageCourses /> : <Navigate to="/dashboard" replace />} />
-          <Route path="/admin/create-course" element={canManageCourses ? <AdminCreateCourse /> : <Navigate to="/dashboard" replace />} />
           <Route
-            path="/admin/edit-course/:courseId"
+            path="/admin/users"
             element={
-              canManageCourses ? (
-                <AdminCreateCourse />
+              isAdmin ? (
+                <DashboardLayout>
+                  <Users />
+                </DashboardLayout>
               ) : (
                 <Navigate to="/dashboard" replace />
               )
             }
           />
           <Route
+            path="/admin/courses"
+            element={
+              canManageCourses ? (
+                <DashboardLayout>
+                  <ManageCourses />
+                </DashboardLayout>
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
+            }
+          />
+          <Route
+            path="/admin/create-course"
+            element={
+              canManageCourses ? (
+                <DashboardLayout>
+                  <AdminCreateCourse />
+                </DashboardLayout>
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
+            }
+          />
+
+          <Route
+            path="/admin/edit-course/:courseId"
+            element={
+              canManageCourses ? (
+                <DashboardLayout>
+                  <AdminCreateCourse />
+                </DashboardLayout>
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
+            }
+          />
+
+          <Route
             path="/admin/assign-course/:courseId"
-            element={isAdmin ? <AssignCourseToEmployees /> : <Navigate to="/dashboard" replace />}
+            element={
+              isAdmin ? (
+                <DashboardLayout>
+                  <AssignCourseToEmployees />
+                </DashboardLayout>
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
+            }
+          />
+
+
+          <Route
+            path="/reports"
+            element={isAdmin ? <Reports /> : <Navigate to="/dashboard" replace />}
           />
 
           <Route path="/forgotpassword" element={<ForgotPassword />} />

@@ -11,6 +11,8 @@ import reviewRouter from "./routes/reviewRoute.js"
 import adminUserRoute from "./routes/adminUserRoute.js"
 import adminCourseRoute from "./routes/adminCourseRoute.js"
 import adminAssignmentRoute from "./routes/adminAssignmentRoute.js"
+import courseAssessmentRoute from "./routes/courseAssessmentRoute.js"
+
 
 
 dotenv.config()
@@ -31,6 +33,10 @@ app.use("/api/review", reviewRouter)
 app.use("/api/admin", adminUserRoute)
 app.use("/api/admin", adminCourseRoute)
 app.use("/api/admin", adminAssignmentRoute)
+app.use("/api/admin", courseAssessmentRoute)
+
+
+
 
 
 
