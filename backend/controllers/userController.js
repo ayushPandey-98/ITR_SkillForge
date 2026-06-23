@@ -1,7 +1,8 @@
-import uploadOnCloudinary from "../configs/cloudinary.js";
+import uploadFromMulterToGridFS from "../configs/uploadFromMulterToGridFS.js";
 import User from "../models/userModel.js";
 
 export const getCurrentUser = async (req,res) => {
+
     try {
         const user = await User.findById(req.userId).select("-password").populate("enrolledCourses")
          if(!user){
@@ -18,10 +19,15 @@ export const UpdateProfile = async (req,res) => {
     try {
         const userId = req.userId
         const {name , description} = req.body
-        let photoUrl
-        if(req.file){
-           photoUrl =await uploadOnCloudinary(req.file.path)
+        let photoUrl;
+        if (req.file) {
+          const uploaded = await uploadFromMulterToGridFS(req.file.path, {
+            filename: req.file.originalname,
+            contentType: req.file.mimetype,
+          });
+          photoUrl = uploaded?.url;
         }
+
         const user = await User.findByIdAndUpdate(userId,{name,description,photoUrl})
 
 

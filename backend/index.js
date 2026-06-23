@@ -12,6 +12,9 @@ import adminUserRoute from "./routes/adminUserRoute.js"
 import adminCourseRoute from "./routes/adminCourseRoute.js"
 import adminAssignmentRoute from "./routes/adminAssignmentRoute.js"
 import courseAssessmentRoute from "./routes/courseAssessmentRoute.js"
+import courseProgressRoute from "./routes/courseProgressRoute.js"
+import fileRoute from "./routes/fileRoute.js"
+
 
 
 
@@ -23,8 +26,12 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
     origin:"http://localhost:5173",
-    credentials:true
-}))
+    credentials:true,
+    allowedHeaders: ["Content-Type", "Range"],
+    exposedHeaders: ["Content-Range", "Content-Length"],
+    methods: ["GET","OPTIONS"],
+}));
+
 app.use("/api/auth", authRouter)
 app.use("/api/user", userRouter)
 app.use("/api/course", courseRouter)
@@ -34,6 +41,9 @@ app.use("/api/admin", adminUserRoute)
 app.use("/api/admin", adminCourseRoute)
 app.use("/api/admin", adminAssignmentRoute)
 app.use("/api/admin", courseAssessmentRoute)
+app.use("/api/course-progress", courseProgressRoute)
+app.use("/api/files", fileRoute)
+
 
 
 
@@ -50,4 +60,5 @@ app.listen(port , ()=>{
     console.log("Server Started "+ port)
     connectDb()
 })
+
 

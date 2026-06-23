@@ -4,7 +4,7 @@ export const genToken = async (userId, role) => {
     const token = jwt.sign(
       { userId, role },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "10d" }
     );
     return token;
   } catch (error) {

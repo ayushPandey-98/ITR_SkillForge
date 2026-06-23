@@ -19,9 +19,11 @@ const courseSchema = new mongoose.Schema({
         type:String,
         enum:['Beginner','Intermediate','Advanced']
     },
+    // GridFS-backed URL (e.g. /api/files/:id)
     thumbnail:{
-        type:String
+        type:String,
     },
+
     enrolledStudents:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User"

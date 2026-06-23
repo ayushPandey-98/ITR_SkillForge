@@ -1,12 +1,25 @@
 import { useNavigate } from "react-router-dom";
+import { serverUrl } from "../App";
+
 const CourseCard = ({ thumbnail, title, category, level, materials = 0, id }) => {
   const navigate = useNavigate();
+
+  const resolvedThumbnail =
+    typeof thumbnail === "string"
+      ? thumbnail.startsWith("/api/files/")
+        ? `${serverUrl}${thumbnail}`
+        : thumbnail.startsWith("http")
+          ? thumbnail
+          : thumbnail
+      : "";
+
 
   return (
     <div className="max-w-sm w-full bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-gray-300 cursor-pointer" onClick={()=>navigate(`/viewcourse/${id}`)}>
       <img
-        src={thumbnail}
+        src={resolvedThumbnail}
         alt={title}
+
         className="w-full h-48 object-cover"
       />
       <div className="p-5 space-y-2">

@@ -22,10 +22,12 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "manager", "employee"],
       required: true,
     },
+    // GridFS-backed URL (e.g. /api/files/:id)
     photoUrl: {
       type: String,
-      default: ""
+      default: "",
     },
+
     enrolledCourses: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Course'

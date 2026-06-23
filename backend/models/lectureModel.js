@@ -20,11 +20,12 @@ const lectureSchema = new mongoose.Schema(
           enum: ["pdf", "video", "videoLink"],
           required: true,
         },
-        // URL after cloudinary upload
+        // GridFS-backed URL (e.g. /api/files/:id)
         fileUrl: {
           type: String,
           default: "",
         },
+
         // for videoLink
         videoLink: {
           type: String,

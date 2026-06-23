@@ -1,7 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-
 import {
   LayoutDashboard,
   BookOpen,
@@ -32,7 +31,7 @@ const navItems = [
   },
   {
     key: "admin_courses",
-    label: "Course Management",
+    label: "Course Mgmt",
     path: "/admin/courses",
     icon: FolderKanban,
     roles: ["admin", "manager"],
@@ -60,24 +59,24 @@ const navItems = [
   },
 ];
 
+const roleStyle = {
+  admin: { label: "Admin", color: "text-[#E8B14F] bg-[#E8B14F]/10" },
+  manager: { label: "Manager", color: "text-[#9B8CFA] bg-[#9B8CFA]/10" },
+  employee: { label: "Employee", color: "text-[#38D2CA] bg-[#38D2CA]/10" },
+};
+
 function clsx(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function RbacSidebar({
-  collapsed,
-  setCollapsed,
-}) {
-  const { userData } = useSelector((state) => state.user);
-
+export default function RbacSidebar({ collapsed, setCollapsed }) {
+  const { userData } = useSelector((s) => s.user);
   const navigate = useNavigate();
   const location = useLocation();
 
   const role = userData?.role || "employee";
-
-  const items = navItems.filter((item) =>
-    item.roles.includes(role)
-  );
+  const items = navItems.filter((item) => item.roles.includes(role));
+  const rs = roleStyle[role] || roleStyle.employee;
 
   const handleLogout = () => {
     localStorage.clear();
@@ -87,156 +86,137 @@ export default function RbacSidebar({
   return (
     <aside
       className={clsx(
-        "h-screen flex flex-col",
-        "bg-gradient-to-b from-[#7c3aed] to-[#6d28d9]",
-        "border-r border-white/10",
-        "shadow-2xl",
+        "h-screen flex flex-col flex-shrink-0",
+        "bg-[#0D1117] border-r border-[#1C2432]",
         "transition-all duration-300 ease-in-out",
-        collapsed ? "w-20" : "w-72"
+        collapsed ? "w-[58px]" : "w-[192px]",
       )}
     >
-      {/* Header */}
-      <div className="h-20 border-b border-white/10 px-4 flex items-center justify-between">
+      {/* ── Header ── */}
+      <div
+        className={clsx(
+          "h-[52px] border-b border-[#1C2432] flex items-center shrink-0",
+          collapsed ? "justify-center px-0" : "justify-between px-3",
+        )}
+      >
         {!collapsed ? (
           <>
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow">
-                <GraduationCap
-                  size={22}
-                  className="text-[#7c3aed]"
-                />
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 bg-[#38D2CA]/12 rounded-lg flex items-center justify-center shrink-0">
+                <GraduationCap size={14} className="text-[#38D2CA]" />
               </div>
-
-              <div>
-                <h2 className="text-white font-bold text-xl leading-none">
+              <div className="min-w-0">
+                <p className="text-white font-semibold text-[12px] leading-none truncate">
                   SkillForge
-                </h2>
-
-                <p className="text-white/70 text-xs mt-1">
+                </p>
+                <p className="text-[#4B5563] text-[10px] mt-[3px]">
                   ITRadiant LMS
                 </p>
               </div>
             </div>
-
             <button
-              onClick={() =>
-                setCollapsed(!collapsed)
-              }
-              className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+              onClick={() => setCollapsed(true)}
+              className="w-6 h-6 rounded-md hover:bg-[#1C2432] text-[#4B5563] hover:text-[#9CA3AF] flex items-center justify-center transition shrink-0"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={13} />
             </button>
           </>
         ) : (
-          <div className="w-full flex flex-col items-center gap-3">
-            <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow">
-              <GraduationCap
-                size={22}
-                className="text-[#7c3aed]"
-              />
-            </div>
-
-            <button
-              onClick={() =>
-                setCollapsed(!collapsed)
-              }
-              className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
+          <button
+            onClick={() => setCollapsed(false)}
+            className="w-8 h-8 rounded-md hover:bg-[#1C2432] text-[#4B5563] hover:text-[#9CA3AF] flex items-center justify-center transition"
+          >
+            <ChevronRight size={14} />
+          </button>
         )}
       </div>
 
-      {/* User */}
-      <div className="px-4 py-5 border-b border-white/10">
+      {/* ── User ── */}
+      <div
+        className={clsx(
+          "py-3 border-b border-[#1C2432] shrink-0",
+          collapsed ? "flex justify-center px-0" : "px-3",
+        )}
+      >
         <div
           className={clsx(
             "flex items-center",
-            collapsed
-              ? "justify-center"
-              : "gap-3"
+            collapsed ? "justify-center" : "gap-2",
           )}
         >
-          <div className="w-12 h-12 rounded-full bg-white text-[#7c3aed] font-bold flex items-center justify-center shadow">
-            {userData?.name?.charAt(0)?.toUpperCase() ||
-              "U"}
+          {/* Avatar */}
+          <div className="w-[30px] h-[30px] rounded-full bg-[#38D2CA]/12 text-[#38D2CA] text-[11px] font-bold flex items-center justify-center shrink-0 ring-1 ring-[#38D2CA]/20">
+            {userData?.name?.charAt(0)?.toUpperCase() || "U"}
           </div>
 
           {!collapsed && (
-            <div>
-              <h4 className="font-semibold text-white">
+            <div className="min-w-0 flex-1">
+              <p className="text-[#E5E7EB] text-[11px] font-medium truncate leading-none">
                 {userData?.name || "User"}
-              </h4>
-
-              <p className="text-sm text-white/70 capitalize">
-                {role}
               </p>
+              <span
+                className={clsx(
+                  "inline-block text-[9px] font-semibold px-1.5 py-0.5 rounded-full mt-1 capitalize",
+                  rs.color,
+                )}
+              >
+                {rs.label}
+              </span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-3 overflow-y-auto">
+      {/* ── Navigation ── */}
+      <nav className="flex-1 p-1.5 overflow-y-auto space-y-0.5">
         {items.map((item) => {
-          const active =
-            location.pathname === item.path;
-
+          const active = location.pathname === item.path;
           const Icon = item.icon;
 
           return (
             <button
               key={item.key}
-              onClick={() =>
-                navigate(item.path)
-              }
+              onClick={() => navigate(item.path)}
+              title={collapsed ? item.label : undefined}
               className={clsx(
-                "w-full rounded-2xl transition-all duration-200 mb-2",
-                "flex items-center",
-                collapsed
-                  ? "justify-center h-14"
-                  : "gap-4 px-4 py-3",
+                "w-full relative rounded-[8px] transition-all duration-150",
+                "flex items-center outline-none",
+                collapsed ? "justify-center h-9" : "gap-2.5 px-2.5 py-[7px]",
                 active
-                  ? "bg-white text-[#7c3aed] shadow-lg"
-                  : "text-white hover:bg-white/10"
+                  ? "bg-[#38D2CA]/10 text-[#38D2CA]"
+                  : "text-[#6B7280] hover:bg-[#1C2432] hover:text-[#D1D5DB]",
               )}
             >
-              <Icon
-                size={22}
-                className="shrink-0"
-              />
+              {/* Active left-bar indicator */}
+              {active && !collapsed && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] bg-[#38D2CA] rounded-full" />
+              )}
 
+              <Icon size={15} className="shrink-0" />
               {!collapsed && (
-                <span className="font-medium">
-                  {item.label}
-                </span>
+                <span className="text-[11px] font-medium">{item.label}</span>
               )}
             </button>
           );
         })}
       </nav>
 
-      {/* Logout */}
-      <div className="p-4 border-t border-white/10">
+      {/* ── Logout ── */}
+      <div className="p-1.5 border-t border-[#1C2432] shrink-0">
         <button
           onClick={handleLogout}
+          title={collapsed ? "Logout" : undefined}
           className={clsx(
-            "w-full rounded-2xl",
-            "bg-white/10 hover:bg-red-500",
-            "transition-all duration-300",
-            "text-white",
+            "w-full rounded-[8px] transition-all duration-150",
+            "text-[#4B5563] hover:bg-red-500/10 hover:text-red-400",
             collapsed
-              ? "h-14 flex justify-center items-center"
-              : "px-4 py-3 flex items-center gap-3"
+              ? "h-9 flex justify-center items-center"
+              : "px-2.5 py-[7px] flex items-center gap-2.5",
           )}
         >
-          <LogOut size={20} />
-
+          <LogOut size={14} />
           {!collapsed && (
-            <span className="font-medium">
-              Logout
-            </span>
+            <span className="text-[11px] font-medium">Logout</span>
           )}
         </button>
       </div>

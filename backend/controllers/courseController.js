@@ -1,7 +1,11 @@
-import uploadOnCloudinary from "../configs/cloudinary.js"
+import uploadFromMulterToGridFS from "../configs/uploadFromMulterToGridFS.js";
 import Course from "../models/courseModel.js"
 import Lecture from "../models/lectureModel.js"
-import User from "../models/userModel.js"
+import User from "../models/userModel.js";
+import path from "path";
+
+
+
 
 // create Courses
 export const createCourse = async (req,res) => {
@@ -59,10 +63,16 @@ export const editCourse = async (req,res) => {
     try {
         const {courseId} = req.params;
         const {title , subTitle , description , category , level , isPublished } = req.body;
-        let thumbnail
-         if(req.file){
-            thumbnail =await uploadOnCloudinary(req.file.path)
-                }
+        let thumbnail;
+        if (req.file) {
+          const uploaded = await uploadFromMulterToGridFS(req.file.path, {
+            filename: req.file.originalname,
+            contentType: req.file.mimetype,
+          });
+          thumbnail = uploaded?.url;
+        }
+
+
         let course = await Course.findById(courseId)
         if(!course){
             return res.status(404).json({message:"Course not found"})
@@ -156,20 +166,26 @@ export const createLecture = async (req, res) => {
       return m;
     });
 
-    // upload file(s) to cloudinary only for those items that have local fileUrl/path
+    // upload file(s) from local multer to GridFS for those items that have local fileUrl/path
+
     const uploadedMaterials = await Promise.all(
       finalMaterials.map(async (m) => {
         if (!m?.fileUrl) return m;
-        // if already a URL (cloudinary) we keep it
-        if (typeof m.fileUrl === "string" && m.fileUrl.startsWith("http")) return m;
-        // otherwise treat as local path
-        const uploaded = await uploadOnCloudinary(m.fileUrl);
+        // Keep existing http URLs/previous GridFS URLs
+        if (typeof m.fileUrl === "string" && (m.fileUrl.startsWith("http") || m.fileUrl.startsWith("/api/files/"))) {
+          return m;
+        }
+        // otherwise treat as local multer path
+        const uploaded = await uploadFromMulterToGridFS(m.fileUrl, {
+          filename: m?.title || path.basename(m.fileUrl),
+        });
         return {
           ...m,
-          fileUrl: uploaded?.url || uploaded?.secure_url || uploaded,
+          fileUrl: uploaded?.url,
         };
       })
     );
+
 
     const lecture = await Lecture.create({
       chapterTitle: chapterTitle || "",
@@ -263,14 +279,19 @@ export const editLecture = async (req, res) => {
     const uploadedMaterials = await Promise.all(
       finalMaterials.map(async (m) => {
         if (!m?.fileUrl) return m;
-        if (typeof m.fileUrl === "string" && m.fileUrl.startsWith("http")) return m;
-        const uploaded = await uploadOnCloudinary(m.fileUrl);
+        if (typeof m.fileUrl === "string" && (m.fileUrl.startsWith("http") || m.fileUrl.startsWith("/api/files/"))) {
+          return m;
+        }
+        const uploaded = await uploadFromMulterToGridFS(m.fileUrl, {
+          filename: m?.title || path.basename(m.fileUrl),
+        });
         return {
           ...m,
-          fileUrl: uploaded?.url || uploaded?.secure_url || uploaded,
+          fileUrl: uploaded?.url,
         };
       })
     );
+
 
     if (lectureTitle) lecture.lectureTitle = lectureTitle;
     if (chapterTitle !== undefined) lecture.chapterTitle = chapterTitle;

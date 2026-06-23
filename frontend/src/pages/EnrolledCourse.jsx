@@ -32,7 +32,13 @@ function EnrolledCourse() {
               className="bg-white rounded-2xl shadow-md overflow-hidden border"
             >
               <img
-                src={course.thumbnail}
+                src={
+                  course?.thumbnail?.startsWith("/api/files/")
+                    ? `${serverUrl}${course.thumbnail}`
+                    : course?.thumbnail?.startsWith("http")
+                      ? course.thumbnail
+                      : course.thumbnail || ""
+                }
                 alt={course.title}
                 className="w-full h-40 object-cover"
               />
